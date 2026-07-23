@@ -2,6 +2,9 @@
 
 > 예배 준비는 보이게, 내 시간에는 숨표를.
 
+**🔗 라이브 데모:** https://chorea0408-png.github.io/sumpyo/
+(모바일 사파리/크롬에서 열고 "홈 화면에 추가"하면 앱처럼 실행됩니다)
+
 3개의 찬양팀(중장년·청소년·청년)을 병행하는 직장인 인도자가 카톡·메모·구글시트에 흩어진
 준비 업무를 **한 화면에서 파악**하고, **지금 해야 할 한 가지**를 놓치지 않게 돕는
 개인용 주간 운영 대시보드 MVP.
@@ -15,7 +18,14 @@
 npm install
 npm run dev      # http://localhost:5174
 npm run build    # 타입체크 + 프로덕션 빌드
+npm run deploy   # 빌드 후 gh-pages 브랜치로 GitHub Pages 배포
 ```
+
+## 배포 (GitHub Pages)
+
+- 호스팅: GitHub Pages (`gh-pages` 브랜치), 저장소 `chorea0408-png/sumpyo`
+- 프로덕션 base 경로는 `/sumpyo/` (Vite `base`), 로컬 개발은 `/`
+- 코드를 고친 뒤 `npm run deploy` 한 번이면 라이브 사이트에 반영됩니다.
 
 ## 핵심 동작
 
