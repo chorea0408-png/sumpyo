@@ -1,30 +1,41 @@
 import { useState } from 'react';
-import type { Task } from '../types';
-import { TEAMS } from '../data/teams';
-import { DAY_MS, startOfWeek } from '../lib/date';
+import type { Task, Team } from '../types';
+import { DAY_MS, isInWeek, startOfWeek } from '../lib/date';
 import { copyText, summaryText } from '../lib/share';
 
 type CopyState = 'idle' | 'ok' | 'fail';
 
-export default function WeeklySummary({ tasks, now }: { tasks: Task[]; now: Date }) {
+export default function WeeklySummary({
+  tasks,
+  teams,
+  now,
+}: {
+  tasks: Task[];
+  teams: Team[];
+  now: Date;
+}) {
   const [copied, setCopied] = useState<CopyState>('idle');
 
-  const from = startOfWeek(now).getTime();
+  const weekStart = startOfWeek(now);
+  const from = weekStart.getTime();
   const to = from + 7 * DAY_MS;
+  const belongsThisWeek = (t: Task) => isInWeek(t.service ?? t.due, weekStart);
+
   const doneThisWeek = tasks.filter((t) => {
     if (!t.done || !t.doneAt) return false;
     const ts = Date.parse(t.doneAt);
     return ts >= from && ts < to;
   }).length;
 
-  const per = TEAMS.map((team) => {
-    const ts = tasks.filter((t) => t.teamId === team.id);
+  const per = teams.map((team) => {
+    const ts = tasks.filter((t) => t.teamId === team.id && belongsThisWeek(t));
     return { team, complete: ts.length > 0 && ts.every((t) => t.done) };
   });
-  const allDone = per.every((p) => p.complete);
+  const allDone = per.length > 0 && per.every((p) => p.complete);
 
   const copy = async () => {
-    const ok = await copyText(summaryText(tasks, now));
+    const weekTasks = tasks.filter(belongsThisWeek);
+    const ok = await copyText(summaryText(weekTasks, teams, now));
     setCopied(ok ? 'ok' : 'fail');
     setTimeout(() => setCopied('idle'), 2500);
   };
@@ -50,7 +61,7 @@ export default function WeeklySummary({ tasks, now }: { tasks: Task[]; now: Date
         ))}
       </ul>
       <p className="weekly-msg">
-        {allDone ? '이번 주도 세 번의 예배를 잘 준비했어요 🌿' : '차근차근, 잘 흘러가고 있어요 🌿'}
+        {allDone ? '이번 주도 예배를 잘 준비했어요 🌿' : '차근차근, 잘 흘러가고 있어요 🌿'}
       </p>
       <button className="btn btn-soft" onClick={copy}>
         {copyLabel}

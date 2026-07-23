@@ -1,79 +1,88 @@
-import type { Task, TaskLink, TeamId } from '../types';
-import { atTime, startOfDay } from '../lib/date';
+import type { Task, Team, TeamId } from '../types';
+import { addDays, thisWeekServiceDate } from '../lib/date';
+import { makeWeekTasks } from './template';
 
-interface SeedRow {
-  team: TeamId;
-  title: string;
-  /** 오늘 기준 일 오프셋: -1=어제, 0=오늘, 1=내일 … */
-  day: number;
-  h: number;
-  m?: number;
-  done?: boolean;
-  doneDay?: number;
-  doneH?: number;
-  link?: TaskLink;
-  custom?: boolean;
+/** 이번 주 완료 단계 수로 세 팀의 서로 다른 상태를 만든다 */
+// 시연일(7/24 금) 기준으로 세 상태가 또렷하게 보이도록 이번 주 완료 단계 수를 잡는다.
+const STORY_DONE: Record<string, number> = {
+  senior: 12, // 지난 수요예배 — 준비 완료 🌿
+  youth: 6, // 주일 D-2 — 공지 단계까지 순항 중
+  young: 4, // 주일 D-2 — 라인업이 밀려 '확인이 필요한' 팀
+};
+
+function customTask(
+  id: string,
+  teamId: TeamId,
+  title: string,
+  day: Date,
+  hour: number,
+  service: string,
+  order: number,
+): Task {
+  const due = new Date(day);
+  due.setHours(hour, 0, 0, 0);
+  return {
+    id,
+    teamId,
+    title,
+    due: due.toISOString(),
+    service,
+    allDay: false,
+    done: false,
+    order,
+    isCustom: true,
+  };
 }
 
-const REF_LINK: TaskLink = { label: '레퍼런스 음원', url: 'https://www.youtube.com' };
-const SHEET_LINK: TaskLink = { label: '악보 시트', url: 'https://docs.google.com' };
-
 /**
- * 데모가 어느 요일에 열려도 세 팀이 각기 다른 상태를 보여주도록 '오늘' 기준으로 배치한다:
- * - 중장년(지난 수요예배): 준비 완료 상태 — 완료 기록/보상 메시지 시연
- * - 청소년(주일 D-3): 어젯밤 라인업이 밀림 → '확인이 필요한 일' + 오늘 마감
- * - 청년(주일 D-3): 콘티부터 시작하는 초반 진행
- * 주간 리듬(콘티 → 악보·라인업 → 전체 공지 → 연습 → 예배)은 순서 그대로 유지.
+ * 시연 기준일(7/24 금) 주변으로 실제 7월~8월 중순 달력에 맞춰 배치.
+ * 각 팀마다 이번 주 예배(스토리) + 다음 주 예배(준비팩)를 시드로 넣고,
+ * 그 이후 주는 '다가오는 예배'에서 준비팩으로 채운다.
+ * 이름: 예소·은우·은성·영광·수현(청소년·청년) / 집사님·권사님(중장년) / 전도사님·목사님(교역자).
  */
-const ROWS: SeedRow[] = [
-  // 중장년 — 수요예배 (지난 예배, 이번 주 준비 완료)
-  { team: 'senior', title: '묵상 · 예배 주제 정리', day: -3, h: 12, done: true, doneDay: -3, doneH: 8 },
-  { team: 'senior', title: '콘티 선정 (3곡)', day: -3, h: 21, done: true, doneDay: -3, doneH: 20, link: REF_LINK },
-  { team: 'senior', title: '교역자 콘티 확인', day: -2, h: 12, done: true, doneDay: -2, doneH: 11 },
-  { team: 'senior', title: '악보 · 송폼 정리', day: -2, h: 18, done: true, doneDay: -2, doneH: 17, link: SHEET_LINK },
-  { team: 'senior', title: '라인업 확정', day: -2, h: 20, done: true, doneDay: -2, doneH: 19 },
-  { team: 'senior', title: '팀 공지 보내기', day: -2, h: 21, done: true, doneDay: -2, doneH: 21 },
-  { team: 'senior', title: '개인 연습 (보컬 · 기타)', day: -1, h: 12, done: true, doneDay: -1, doneH: 9 },
-  { team: 'senior', title: '음향 · 장비 점검', day: -1, h: 17, done: true, doneDay: -1, doneH: 16 },
-  { team: 'senior', title: '수요예배 마침 기록', day: -1, h: 21, done: true, doneDay: -1, doneH: 22 },
+export function makeSeed(teams: Team[], now: Date = new Date()): Task[] {
+  const out: Task[] = [];
 
-  // 청소년 — 주일예배 (어젯밤 라인업이 밀린 상태)
-  { team: 'youth', title: '묵상 · 예배 주제 정리', day: -3, h: 10, done: true, doneDay: -3, doneH: 9 },
-  { team: 'youth', title: '콘티 선정 (3곡)', day: -3, h: 18, done: true, doneDay: -3, doneH: 18, link: REF_LINK },
-  { team: 'youth', title: '교역자 콘티 확인', day: -3, h: 21, done: true, doneDay: -3, doneH: 21 },
-  { team: 'youth', title: '악보 · 송폼 공지', day: -1, h: 20, done: true, doneDay: -1, doneH: 20 },
-  { team: 'youth', title: '라인업 확정', day: -1, h: 21 },
-  { team: 'youth', title: '전체 셋리스트 공지', day: 0, h: 18 },
-  { team: 'youth', title: '대본 스크립트 작성', day: 2, h: 21 },
-  { team: 'youth', title: '지현이 생일 축하 준비', day: 3, h: 13, custom: true },
-  { team: 'youth', title: '팀 연습 · 나눔 모임', day: 3, h: 14 },
-  { team: 'youth', title: '주일예배 마침 기록', day: 4, h: 11 },
+  for (const team of teams) {
+    const thisService = thisWeekServiceDate(team.serviceWeekday, now);
+    const nextService = thisWeekServiceDate(team.serviceWeekday, addDays(now, 7));
+    out.push(
+      ...makeWeekTasks(team, thisService, {
+        doneCount: STORY_DONE[team.id] ?? 0,
+        idPrefix: `${team.id}-w0`,
+      }),
+    );
+    out.push(...makeWeekTasks(team, nextService, { doneCount: 0, idPrefix: `${team.id}-w1` }));
+  }
 
-  // 청년 — 주일예배 (초반 단계)
-  { team: 'young', title: '묵상 · 예배 주제 정리', day: -1, h: 21, done: true, doneDay: -1, doneH: 22 },
-  { team: 'young', title: '콘티 선정 (4곡)', day: 0, h: 21, link: REF_LINK },
-  { team: 'young', title: '교역자 콘티 확인', day: 1, h: 12 },
-  { team: 'young', title: '악보 · 송폼 정리', day: 1, h: 21, link: SHEET_LINK },
-  { team: 'young', title: '라인업 확정', day: 2, h: 18 },
-  { team: 'young', title: '팀 공지 보내기', day: 2, h: 21 },
-  { team: 'young', title: '대본 스크립트 작성', day: 3, h: 13 },
-  { team: 'young', title: '팀 연습 · 나눔 모임', day: 3, h: 16 },
-  { team: 'young', title: '음향 · 장비 세팅', day: 4, h: 9 },
-  { team: 'young', title: '주일예배 마침 기록', day: 4, h: 13 },
-];
+  // 이름이 들어간 이번 주 커스텀 업무
+  const youth = teams.find((t) => t.id === 'youth');
+  if (youth) {
+    const svc = thisWeekServiceDate(youth.serviceWeekday, now);
+    const svcIso = svc.toISOString();
+    out.push(customTask('c-youth-1', 'youth', '예소 생일 축하 순서 준비', svc, 13, svcIso, 100));
+    out.push(
+      customTask('c-youth-2', 'youth', '은우 시험기간 — 라인업 조정', addDays(svc, -1), 20, svcIso, 101),
+    );
+    out.push(customTask('c-youth-3', 'youth', '은성 형제 드럼 셋업 확인', svc, 9, svcIso, 102));
+  }
+  const young = teams.find((t) => t.id === 'young');
+  if (young) {
+    const svc = thisWeekServiceDate(young.serviceWeekday, now);
+    const svcIso = svc.toISOString();
+    out.push(
+      customTask('c-young-1', 'young', '영광 형제 간증 순서 조율', addDays(svc, -1), 19, svcIso, 100),
+    );
+    out.push(customTask('c-young-2', 'young', '수현 자매 새 신자 환영 인사', svc, 12, svcIso, 101));
+  }
+  const senior = teams.find((t) => t.id === 'senior');
+  if (senior) {
+    // 지난 예배지만 다음 주를 위해 미리 챙길 항목 (다음 주 예배에 귀속)
+    const svc = thisWeekServiceDate(senior.serviceWeekday, addDays(now, 7));
+    const svcIso = svc.toISOString();
+    out.push(customTask('c-senior-1', 'senior', '박 권사님 특송 반주 조율', addDays(svc, -2), 20, svcIso, 100));
+    out.push(customTask('c-senior-2', 'senior', '김 집사님 헌금기도 순서 확인', addDays(svc, -2), 21, svcIso, 101));
+  }
 
-export function makeSeed(now: Date = new Date()): Task[] {
-  const today = startOfDay(now);
-  return ROWS.map((r, i) => ({
-    id: `seed-${i}`,
-    teamId: r.team,
-    title: r.title,
-    due: atTime(today, r.day, r.h, r.m ?? 0),
-    allDay: false,
-    done: !!r.done,
-    doneAt: r.done ? atTime(today, r.doneDay ?? r.day, r.doneH ?? r.h) : undefined,
-    order: i,
-    isCustom: r.custom,
-    link: r.link,
-  }));
+  return out;
 }

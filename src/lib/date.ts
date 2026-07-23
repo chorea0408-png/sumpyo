@@ -14,6 +14,12 @@ export function startOfWeek(d: Date = new Date()): Date {
   return x;
 }
 
+export function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
 export function atTime(base: Date, dayOffset: number, hour: number, minute = 0): string {
   const x = new Date(base);
   x.setDate(x.getDate() + dayOffset);
@@ -29,6 +35,10 @@ export function fmtDateLine(d: Date): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEKDAYS_KO[d.getDay()]}요일`;
 }
 
+export function fmtDateShort(d: Date): string {
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS_KO[d.getDay()]})`;
+}
+
 export function toDateInput(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -37,9 +47,14 @@ export function toDateInput(d: Date): string {
 export function thisWeekServiceDate(weekday: number, now: Date = new Date()): Date {
   const monday = startOfWeek(now);
   const offset = (weekday + 6) % 7; // 월=0 … 일=6
-  const d = new Date(monday);
-  d.setDate(d.getDate() + offset);
-  return d;
+  return addDays(monday, offset);
+}
+
+/** 마감/예배가 특정 주(월~일)에 속하는지 */
+export function isInWeek(iso: string, weekStart: Date): boolean {
+  const t = new Date(iso).getTime();
+  const s = weekStart.getTime();
+  return t >= s && t < s + 7 * DAY_MS;
 }
 
 /** 예배까지 남은 날 표기 — 오늘/내일/D-n/지난 예배 */

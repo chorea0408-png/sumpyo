@@ -1,13 +1,13 @@
-import type { Task } from '../types';
-import { TEAMS } from '../data/teams';
+import type { Task, Team } from '../types';
 import { dueInfo, fmtDateLine } from './date';
 import { overdue, pendingSorted } from './priority';
 
 /** 카톡에 붙여넣는 주간 현황 텍스트 — Solo Utility First 전략의 접점 */
-export function summaryText(tasks: Task[], now: Date): string {
+export function summaryText(tasks: Task[], teams: Team[], now: Date): string {
   const lines = [`🎵 숨표 주간 현황 — ${fmtDateLine(now)}`];
-  for (const team of TEAMS) {
+  for (const team of teams) {
     const ts = tasks.filter((t) => t.teamId === team.id);
+    if (ts.length === 0) continue;
     const done = ts.filter((t) => t.done).length;
     const next = pendingSorted(ts)[0];
     const od = overdue(ts, now).length;

@@ -1,40 +1,64 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Task, TeamId } from './types';
-import { TEAMS, teamById } from './data/teams';
+import type { Task, Team, TeamId } from './types';
+import { INITIAL_TEAMS, findTeam, nextColor } from './data/teams';
 import { makeSeed } from './data/seed';
+import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
 import { pendingSorted } from './lib/priority';
+import {
+  WEEKDAYS_KO,
+  addDays,
+  isInWeek,
+  startOfWeek,
+  thisWeekServiceDate,
+} from './lib/date';
+import Landing from './components/Landing';
 import Header from './components/Header';
 import NextAction from './components/NextAction';
 import Upcoming from './components/Upcoming';
+import UpcomingServices from './components/UpcomingServices';
 import TeamCard from './components/TeamCard';
 import TeamDetail from './components/TeamDetail';
 import WeeklySummary from './components/WeeklySummary';
 import QuickAdd from './components/QuickAdd';
+import AddTeam from './components/AddTeam';
 
 type Filter = TeamId | 'all';
+interface DetailTarget {
+  teamId: TeamId;
+  service: string;
+}
 
 export default function App() {
-  const [tasks, setTasks] = useState<Task[]>(() => storage.load() ?? makeSeed());
+  const [teams, setTeams] = useState<Team[]>(() => storage.loadTeams() ?? INITIAL_TEAMS);
+  const [tasks, setTasks] = useState<Task[]>(
+    () => storage.loadTasks() ?? makeSeed(storage.loadTeams() ?? INITIAL_TEAMS),
+  );
+  const [entered, setEntered] = useState<boolean>(() => storage.loadEntered());
   const [filter, setFilter] = useState<Filter>('all');
-  const [detailTeam, setDetailTeam] = useState<TeamId | null>(null);
+  const [detail, setDetail] = useState<DetailTarget | null>(null);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [addTeamOpen, setAddTeamOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
-  useEffect(() => {
-    storage.save(tasks);
-  }, [tasks]);
+  useEffect(() => storage.saveTasks(tasks), [tasks]);
+  useEffect(() => storage.saveTeams(teams), [teams]);
+  useEffect(() => storage.saveEntered(entered), [entered]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
 
-  const filtered = useMemo(
-    () => (filter === 'all' ? tasks : tasks.filter((t) => t.teamId === filter)),
-    [tasks, filter],
+  const weekStart = startOfWeek(now);
+  const inWeek = (t: Task) => isInWeek(t.service ?? t.due, weekStart);
+  const weekTasks = useMemo(() => tasks.filter(inWeek), [tasks, now]);
+
+  const filteredWeek = useMemo(
+    () => (filter === 'all' ? weekTasks : weekTasks.filter((t) => t.teamId === filter)),
+    [weekTasks, filter],
   );
-  const pending = useMemo(() => pendingSorted(filtered), [filtered]);
+  const pending = useMemo(() => pendingSorted(filteredWeek), [filteredWeek]);
   const hero = pending[0] ?? null;
   const upcoming = pending.slice(1, 4);
 
@@ -81,57 +105,138 @@ export default function App() {
     );
   };
 
+  /** 예배 주간 준비팩(12단계) 추가 — service 지정 시 그 주, 아니면 가장 가까운 빈 주 */
+  const addPack = (teamId: TeamId, iso?: string) => {
+    const team = findTeam(teams, teamId);
+    if (!team) return;
+    let service = iso ? new Date(iso) : null;
+    if (!service) {
+      for (let w = 0; w < 8; w++) {
+        const cand = thisWeekServiceDate(team.serviceWeekday, addDays(now, w * 7));
+        if (!tasks.some((t) => t.teamId === teamId && t.service === cand.toISOString())) {
+          service = cand;
+          break;
+        }
+      }
+    }
+    if (!service) return;
+    const svcIso = service.toISOString();
+    if (tasks.some((t) => t.teamId === teamId && t.service === svcIso)) return; // 이미 있음
+    const prefix = `${teamId}-${svcIso.slice(0, 10)}`;
+    setTasks((ts) => [...ts, ...makeWeekTasks(team, service!, { doneCount: 0, idPrefix: prefix })]);
+  };
+
+  const addTeam = (shortName: string, serviceName: string, weekday: number) => {
+    const id = crypto.randomUUID();
+    const team: Team = {
+      id,
+      name: shortName,
+      shortName,
+      serviceName,
+      serviceDayLabel: `${WEEKDAYS_KO[weekday]}요일`,
+      serviceWeekday: weekday,
+      songCount: 4,
+      pastorLabel: '목사님',
+      color: nextColor(teams.length),
+      custom: true,
+    };
+    setTeams((ts) => [...ts, team]);
+    // 준비 기간이 충분한 다음 주부터 두 번의 예배 준비팩을 채운다 (과거로 backfill 방지)
+    const nextService = thisWeekServiceDate(weekday, addDays(now, 7));
+    const afterService = thisWeekServiceDate(weekday, addDays(now, 14));
+    setTasks((ts) => [
+      ...ts,
+      ...makeWeekTasks(team, nextService, { doneCount: 0, idPrefix: `${id}-w1` }),
+      ...makeWeekTasks(team, afterService, { doneCount: 0, idPrefix: `${id}-w2` }),
+    ]);
+    setAddTeamOpen(false);
+  };
+
+  const openTeam = (teamId: TeamId) => {
+    const team = findTeam(teams, teamId);
+    if (!team) return;
+    setDetail({ teamId, service: thisWeekServiceDate(team.serviceWeekday, now).toISOString() });
+  };
+  const openService = (teamId: TeamId, iso: string) => setDetail({ teamId, service: iso });
+
   const reset = () => {
     if (window.confirm('데모 데이터를 처음 상태로 되돌릴까요?')) {
-      storage.clear();
-      setTasks(makeSeed());
+      storage.clearData();
+      setTeams(INITIAL_TEAMS);
+      setTasks(makeSeed(INITIAL_TEAMS));
+      setFilter('all');
     }
   };
 
+  if (!entered) {
+    return <Landing onEnter={() => setEntered(true)} />;
+  }
+
+  const detailTeam = detail ? findTeam(teams, detail.teamId) : undefined;
+  const visibleTeams = teams.filter((t) => filter === 'all' || t.id === filter);
+  // 이번 주 예배가 있는 팀만 카드로 (추가된 팀은 '다가오는 예배'에서 준비 시작)
+  const gridTeams = visibleTeams.filter((t) => weekTasks.some((x) => x.teamId === t.id));
+
   return (
     <div className="app">
-      <Header now={now} tasks={tasks} />
+      <Header now={now} tasks={weekTasks} />
 
       <nav className="container chips" aria-label="팀 필터">
-        {(['all', ...TEAMS.map((t) => t.id)] as Filter[]).map((f) => (
+        {(['all', ...teams.map((t) => t.id)] as Filter[]).map((f) => (
           <button
             key={f}
             className={`filter-chip${filter === f ? ' active' : ''}`}
             aria-pressed={filter === f}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? '전체' : teamById(f as TeamId).shortName}
+            {f === 'all' ? '전체' : findTeam(teams, f)?.shortName ?? f}
           </button>
         ))}
+        <button className="chip-add" aria-label="예배 추가" onClick={() => setAddTeamOpen(true)}>
+          ＋
+        </button>
       </nav>
 
       <main className="container main">
         <div className="top-grid">
           <div className="col">
-            <NextAction task={hero} now={now} onComplete={toggle} onOpenTeam={setDetailTeam} />
-            <Upcoming tasks={upcoming} now={now} onOpenTeam={setDetailTeam} />
+            <NextAction task={hero} teams={teams} now={now} onComplete={toggle} onOpenTeam={openTeam} />
+            <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
           </div>
-          <WeeklySummary tasks={tasks} now={now} />
+          <WeeklySummary tasks={tasks} teams={teams} now={now} />
         </div>
 
         <p className="section-label">팀별 준비 현황</p>
         <div className="team-grid">
-          {TEAMS.filter((t) => filter === 'all' || t.id === filter).map((t) => (
+          {gridTeams.map((t) => (
             <TeamCard
               key={t.id}
               team={t}
-              tasks={tasks.filter((x) => x.teamId === t.id)}
+              tasks={weekTasks.filter((x) => x.teamId === t.id)}
               now={now}
-              onOpen={() => setDetailTeam(t.id)}
+              onOpen={() => openTeam(t.id)}
             />
           ))}
         </div>
+
+        <UpcomingServices
+          teams={visibleTeams}
+          tasks={tasks}
+          now={now}
+          onOpenService={openService}
+          onAddPack={addPack}
+        />
       </main>
 
       <footer className="container footer">
-        <button className="reset-btn" onClick={reset}>
-          데모 데이터 초기화
-        </button>
+        <div className="footer-actions">
+          <button className="reset-btn" onClick={() => setEntered(false)}>
+            숨표 소개 다시 보기
+          </button>
+          <button className="reset-btn" onClick={reset}>
+            데모 데이터 초기화
+          </button>
+        </div>
         <p className="tagline">숨표 — 예배 준비는 보이게, 내 시간에는 숨표를.</p>
       </footer>
 
@@ -141,7 +246,8 @@ export default function App() {
 
       {quickOpen && (
         <QuickAdd
-          defaultTeam={filter === 'all' ? TEAMS[0].id : filter}
+          teams={teams}
+          defaultTeam={filter === 'all' ? teams[0].id : filter}
           onAdd={(title, teamId, dateStr) => {
             addTask(title, teamId, dateStr);
             setQuickOpen(false);
@@ -150,16 +256,20 @@ export default function App() {
         />
       )}
 
-      {detailTeam && (
+      {addTeamOpen && <AddTeam onAdd={addTeam} onClose={() => setAddTeamOpen(false)} />}
+
+      {detail && detailTeam && (
         <TeamDetail
-          team={teamById(detailTeam)}
-          tasks={tasks.filter((t) => t.teamId === detailTeam)}
+          team={detailTeam}
+          tasks={tasks.filter((t) => t.teamId === detail.teamId)}
           now={now}
+          focusService={detail.service}
           onToggle={toggle}
           onAdd={addTask}
           onDelete={removeTask}
           onReschedule={rescheduleTask}
-          onClose={() => setDetailTeam(null)}
+          onAddPack={addPack}
+          onClose={() => setDetail(null)}
         />
       )}
     </div>

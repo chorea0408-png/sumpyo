@@ -1,15 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { TeamId } from '../types';
-import { TEAMS } from '../data/teams';
+import type { Team, TeamId } from '../types';
 import { toDateInput } from '../lib/date';
 
 interface Props {
+  teams: Team[];
   defaultTeam: TeamId;
   onAdd: (title: string, teamId: TeamId, dateStr: string) => void;
   onClose: () => void;
 }
 
-export default function QuickAdd({ defaultTeam, onAdd, onClose }: Props) {
+export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [teamId, setTeamId] = useState<TeamId>(defaultTeam);
   const [date, setDate] = useState(toDateInput(new Date()));
@@ -52,13 +52,13 @@ export default function QuickAdd({ defaultTeam, onAdd, onClose }: Props) {
             className="text-input full"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="예) 베이스 지민이 다음 주 시험, 라인업 조정"
+            placeholder="예) 은우 시험기간, 라인업 조정"
             aria-label="할 일 내용"
             autoFocus
           />
           <p className="field-label">소속 팀</p>
           <div className="team-select">
-            {TEAMS.map((t) => (
+            {teams.map((t) => (
               <button
                 key={t.id}
                 type="button"

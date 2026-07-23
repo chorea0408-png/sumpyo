@@ -1,5 +1,5 @@
-export type TeamId = 'senior' | 'youth' | 'young';
-export type TeamColor = 'sage' | 'apricot' | 'mist';
+export type TeamId = string;
+export type TeamColor = 'sage' | 'apricot' | 'mist' | 'clay' | 'lavender' | 'moss';
 
 export interface Team {
   id: TeamId;
@@ -7,9 +7,15 @@ export interface Team {
   shortName: string;
   serviceName: string;
   serviceDayLabel: string;
-  /** 예배 요일: 0=일 … 6=토 (D-day 계산용) */
+  /** 예배 요일: 0=일 … 6=토 (D-day·서비스 주 계산용) */
   serviceWeekday: number;
+  /** 콘티 곡 수 */
+  songCount: number;
+  /** 교역자 호칭 (예: 청소년 전도사님, 목사님) */
+  pastorLabel: string;
   color: TeamColor;
+  /** 사용자가 추가한 팀 */
+  custom?: boolean;
 }
 
 export interface TaskLink {
@@ -23,6 +29,8 @@ export interface Task {
   title: string;
   /** ISO datetime — 마감 시각 */
   due: string;
+  /** 이 업무가 속한 예배 날짜(ISO). 준비팩으로 생성된 업무에 부여 — 주 단위 묶음 기준 */
+  service?: string;
   /** true면 시간 없이 '오늘까지'처럼 표기 */
   allDay?: boolean;
   done: boolean;

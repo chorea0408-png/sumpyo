@@ -947,3 +947,251 @@ a {
     transition: none !important;
   }
 }
+
+/* ─── 추가 팀 색상 ─── */
+.chip-clay { background: #efe6dd; color: #7a5b44; }
+.chip-lavender { background: #eae7f0; color: #625a7a; }
+.chip-moss { background: #eceff0; color: #63713f; }
+.fill-clay { background: #a98467; }
+.fill-lavender { background: #9088a8; }
+.fill-moss { background: #8f9b6c; }
+.dot-clay { background: #a98467; }
+.dot-lavender { background: #9088a8; }
+.dot-moss { background: #8f9b6c; }
+
+/* ─── 예배 추가 (+) 칩 ─── */
+.chip-add {
+  min-height: 44px;
+  width: 44px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--sage-deep);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  font-weight: 300;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+}
+
+.chip-add:hover {
+  background: var(--sage-soft);
+}
+
+/* ─── 다가오는 예배 ─── */
+.upcoming-svc ul {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.svc-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f3efe7;
+}
+
+.svc-item:last-child {
+  border-bottom: 0;
+}
+
+.svc-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.svc-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-weight: 650;
+  font-size: 14.5px;
+}
+
+.svc-date {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.svc-dday {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: #f1ede4;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.svc-open {
+  flex: none;
+  min-width: 52px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.svc-add {
+  flex: none;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--apricot-soft);
+  color: var(--apricot-deep);
+  font-weight: 650;
+  font-size: 12.5px;
+}
+
+/* ─── 준비팩 빈 상태 ─── */
+.pack-empty {
+  text-align: center;
+  padding: 40px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pack-empty-msg {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.add-team-hint {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 14px;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ─── 랜딩 ─── */
+.landing {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 22px calc(40px + env(safe-area-inset-bottom));
+}
+
+.landing-inner {
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+}
+
+.landing-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  letter-spacing: 0.01em;
+}
+
+.landing-logo {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 14px;
+  line-height: 1;
+}
+
+.landing-tagline {
+  font-size: 16px;
+  color: var(--ink-2);
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.landing-lead {
+  margin-top: 26px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.landing-lead b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.landing-points {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.landing-point {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.lp-icon {
+  font-size: 24px;
+  flex: none;
+}
+
+.lp-title {
+  font-weight: 700;
+  font-size: 15.5px;
+}
+
+.lp-desc {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+.landing-diff {
+  margin-top: 22px;
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.landing-diff b {
+  color: var(--sage-deep);
+  font-weight: 750;
+}
+
+.landing-cta {
+  margin-top: 26px;
+  width: 100%;
+  height: 54px;
+  font-size: 16px;
+}
+
+.landing-foot {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}

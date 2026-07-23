@@ -1,17 +1,20 @@
-import type { Task, TeamId } from '../types';
-import { teamById } from '../data/teams';
+import type { Task, Team, TeamId } from '../types';
+import { findTeam } from '../data/teams';
 import { dueInfo } from '../lib/date';
 import { DueBadge, TeamChip } from './ui';
 
 interface Props {
   task: Task | null;
+  teams: Team[];
   now: Date;
   onComplete: (id: string) => void;
   onOpenTeam: (teamId: TeamId) => void;
 }
 
-export default function NextAction({ task, now, onComplete, onOpenTeam }: Props) {
-  if (!task) {
+export default function NextAction({ task, teams, now, onComplete, onOpenTeam }: Props) {
+  const team = task ? findTeam(teams, task.teamId) : undefined;
+
+  if (!task || !team) {
     return (
       <section className="card hero">
         <p className="card-label">가장 먼저 할 일</p>
@@ -21,7 +24,6 @@ export default function NextAction({ task, now, onComplete, onOpenTeam }: Props)
     );
   }
 
-  const team = teamById(task.teamId);
   const info = dueInfo(task.due, now, task.allDay);
 
   return (
