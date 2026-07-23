@@ -1,7 +1,9 @@
 import type { Task } from '../types';
 import { ddayLabel, fmtDateLine } from '../lib/date';
 import { dueToday, overdue } from '../lib/priority';
+import { verseOfTheDay } from '../lib/verses';
 import { ProgressBar } from './ui';
+import VerseCard from './VerseCard';
 
 function greeting(hour: number, name?: string): string {
   const suffix = name ? `${name}님` : '인도자님';
@@ -32,6 +34,7 @@ export default function Header({ now, tasks, nextServiceDate, profileName }: Pro
         : '이번 주 준비가 잘 흘러가고 있어요.';
 
   const dday = nextServiceDate ? ddayLabel(nextServiceDate, now) : null;
+  const verse = verseOfTheDay(now);
 
   return (
     <header className="container header">
@@ -41,6 +44,7 @@ export default function Header({ now, tasks, nextServiceDate, profileName }: Pro
         {dday && <span className="next-dday">다음 예배 {dday}</span>}
       </div>
       <p className="status">{status}</p>
+      <VerseCard verse={verse} />
       <div className="overall card">
         <div className="overall-row">
           <span>이번 주 전체 준비</span>

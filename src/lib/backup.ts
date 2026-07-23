@@ -1,4 +1,4 @@
-import type { Task, Team } from '../types';
+import type { Profile, Task, Team } from '../types';
 
 const BACKUP_VERSION = 1;
 
@@ -8,6 +8,7 @@ interface BackupFile {
   exportedAt: string;
   teams: Team[];
   tasks: Task[];
+  profile?: Profile;
 }
 
 function fmtStamp(d: Date): string {
@@ -15,13 +16,14 @@ function fmtStamp(d: Date): string {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
 }
 
-export function exportBackup(teams: Team[], tasks: Task[]): void {
+export function exportBackup(teams: Team[], tasks: Task[], profile?: Profile): void {
   const payload: BackupFile = {
     app: 'sumpyo',
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     teams,
     tasks,
+    profile,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -35,13 +37,19 @@ export function exportBackup(teams: Team[], tasks: Task[]): void {
 }
 
 export type ImportResult =
-  | { ok: true; teams: Team[]; tasks: Task[] }
+  | { ok: true; teams: Team[]; tasks: Task[]; profile: Profile | null }
   | { ok: false; error: string };
 
 function isTeam(x: unknown): x is Team {
   if (!x || typeof x !== 'object') return false;
   const t = x as Record<string, unknown>;
   return typeof t.id === 'string' && typeof t.shortName === 'string' && typeof t.serviceWeekday === 'number';
+}
+
+function isProfile(x: unknown): x is Profile {
+  if (!x || typeof x !== 'object') return false;
+  const p = x as Record<string, unknown>;
+  return typeof p.name === 'string' && typeof p.church === 'string';
 }
 
 function isTask(x: unknown): x is Task {
@@ -67,7 +75,8 @@ export function parseBackup(raw: string): ImportResult {
   if (!Array.isArray(d.tasks) || !d.tasks.every(isTask)) {
     return { ok: false, error: '업무 데이터가 손상되었어요' };
   }
-  return { ok: true, teams: d.teams, tasks: d.tasks };
+  const profile = isProfile(d.profile) ? d.profile : null;
+  return { ok: true, teams: d.teams, tasks: d.tasks, profile };
 }
 
 export function readFileAsText(file: File): Promise<string> {

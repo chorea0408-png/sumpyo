@@ -12,7 +12,7 @@ interface Props {
   onReset: () => void;
   onAddTeam: () => void;
   onEditTeam: (teamId: TeamId) => void;
-  onImport: (teams: Team[], tasks: Task[]) => void;
+  onImport: (teams: Team[], tasks: Task[], profile: Profile | null) => void;
 }
 
 type ImportState = 'idle' | 'ok' | 'fail';
@@ -46,7 +46,7 @@ export default function MyPage({
       return;
     }
     if (window.confirm(`백업 파일에는 팀 ${result.teams.length}개, 업무 ${result.tasks.length}건이 있어요. 지금 데이터를 덮어쓸까요?`)) {
-      onImport(result.teams, result.tasks);
+      onImport(result.teams, result.tasks, result.profile);
       setImportState('ok');
       setImportMsg('불러오기 완료');
     }
@@ -98,7 +98,7 @@ export default function MyPage({
 
       <p className="mypage-section-label">데이터</p>
       <section className="card mypage-section">
-        <button className="mypage-row" onClick={() => exportBackup(teams, tasks)}>
+        <button className="mypage-row" onClick={() => exportBackup(teams, tasks, profile)}>
           <span>데이터 내보내기 (백업 파일)</span>
           <span className="mypage-arrow">›</span>
         </button>

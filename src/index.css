@@ -132,6 +132,28 @@ a {
   font-size: 15px;
 }
 
+.verse-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--sage-soft);
+  border-radius: 14px;
+}
+
+.verse-text {
+  font-size: 13.5px;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.verse-ref {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sage-deep);
+  text-align: right;
+}
+
 .card {
   background: var(--card);
   border-radius: var(--radius);
@@ -1688,6 +1710,12 @@ a {
   font-size: 13px;
   font-weight: 700;
   color: var(--ink-2);
+}
+
+.profile-field .text-input {
+  /* .text-input의 flex:1 1 160px는 가로 배치용 — 세로 컬럼인 이 안에서는
+     flex-basis가 높이로 적용돼 인풋이 비정상적으로 커지므로 재정의 */
+  flex: none;
 }
 
 .mypage-row {

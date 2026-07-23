@@ -139,7 +139,7 @@ export default function App() {
         const team = findTeam(teams, target.teamId);
         if (team) {
           if (celebrationTimer.current) window.clearTimeout(celebrationTimer.current);
-          setCelebration(team.name);
+          setCelebration(team.shortName);
           celebrationTimer.current = window.setTimeout(() => setCelebration(null), 2500);
         }
       }
@@ -257,9 +257,10 @@ export default function App() {
     setTeamForm(null);
   };
 
-  const importBackup = (importedTeams: Team[], importedTasks: Task[]) => {
+  const importBackup = (importedTeams: Team[], importedTasks: Task[], importedProfile: Profile | null) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
+    if (importedProfile) setProfile(importedProfile);
     setFilter('all');
   };
 

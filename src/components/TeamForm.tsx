@@ -36,7 +36,11 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
     setMembers((m) => [...m, name]);
     setMemberInput('');
   };
-  const removeMember = (i: number) => setMembers((m) => m.filter((_, idx) => idx !== i));
+  const removeMember = (i: number, name: string) => {
+    if (window.confirm(`${name}님을 명단에서 삭제할까요?`)) {
+      setMembers((m) => m.filter((_, idx) => idx !== i));
+    }
+  };
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -166,7 +170,7 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
                   {members.map((m, i) => (
                     <li key={`${m}-${i}`} className="member-chip">
                       {m}
-                      <button type="button" aria-label={`${m} 삭제`} onClick={() => removeMember(i)}>
+                      <button type="button" aria-label={`${m} 삭제`} onClick={() => removeMember(i, m)}>
                         ✕
                       </button>
                     </li>
