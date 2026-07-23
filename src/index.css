@@ -921,7 +921,7 @@ a {
   background: var(--card);
   box-shadow: var(--shadow);
   padding: 0 14px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .text-input::placeholder {
@@ -936,7 +936,7 @@ a {
   box-shadow: var(--shadow);
   padding: 0 12px;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .sheet-compact .field-label {
@@ -1043,6 +1043,10 @@ a {
     bottom: calc(20px + env(safe-area-inset-bottom));
   }
 
+  .undo-toast {
+    bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+
   .bottom-nav {
     position: static;
     background: transparent;
@@ -1129,12 +1133,24 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-height: 58px;
   padding: 8px 4px;
+  text-align: left;
   border-bottom: 1px solid #f3efe7;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.svc-item:hover {
+  background: #faf8f3;
 }
 
 .svc-item:last-child {
+  border-bottom: 0;
+}
+
+.upcoming-svc li:last-child .svc-item {
   border-bottom: 0;
 }
 
@@ -1173,6 +1189,9 @@ a {
 }
 
 .svc-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   min-width: 52px;
   height: 40px;
@@ -1184,6 +1203,9 @@ a {
 }
 
 .svc-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   height: 40px;
   padding: 0 12px;
@@ -1201,6 +1223,47 @@ a {
   color: var(--sage-deep);
   font-weight: 650;
   font-size: 13.5px;
+}
+
+/* ─── 완료 취소 토스트 ─── */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 40px);
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fbfaf7;
+  box-shadow: 0 10px 28px rgba(29, 29, 31, 0.28);
+  animation: toast-in 0.2s ease;
+}
+
+.undo-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-btn {
+  flex: none;
+  color: var(--apricot);
+  font-weight: 750;
+  font-size: 13.5px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
 }
 
 /* ─── 하단 탭바 ─── */
@@ -1404,6 +1467,43 @@ a {
   justify-content: center;
 }
 
+/* ─── 빈 상태 (팀 없음) ─── */
+.empty-home {
+  padding-top: 100px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  letter-spacing: 0.01em;
+}
+
+.empty-title {
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin-top: 12px;
+}
+
+.empty-desc {
+  margin-top: 12px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.empty-cta {
+  margin-top: 26px;
+  height: 52px;
+  padding: 0 28px;
+}
+
 /* ─── 랜딩 ─── */
 .landing {
   min-height: 100dvh;
@@ -1475,6 +1575,17 @@ a {
   width: 100%;
   height: 54px;
   font-size: 16px;
+}
+
+.landing-cta-group {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing-cta-group .landing-cta {
+  margin-top: 0;
 }
 
 .landing-foot {

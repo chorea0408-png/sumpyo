@@ -41,24 +41,27 @@ export default function UpcomingServices({ teams, tasks, now, onOpenService, onV
       <p className="card-label">다가오는 예배</p>
       <ul>
         {rows.map((r) => (
-          <li key={r.team.id} className="svc-item">
-            <TeamChip team={r.team} />
-            <div className="svc-main">
-              <span className="svc-name">
-                {r.team.serviceName}
-                <span className="svc-date">{fmtDateShort(r.date)}</span>
-              </span>
-              <span className="svc-dday">{ddayLabel(r.date, now)}</span>
-            </div>
-            {r.total > 0 ? (
-              <button className="svc-open" onClick={() => onOpenService(r.team.id, r.iso)}>
-                {r.done}/{r.total}
-              </button>
-            ) : (
-              <button className="svc-add" onClick={onViewAll}>
-                준비팩 추가
-              </button>
-            )}
+          <li key={r.team.id}>
+            <button
+              className="svc-item"
+              onClick={() => (r.total > 0 ? onOpenService(r.team.id, r.iso) : onViewAll())}
+            >
+              <TeamChip team={r.team} />
+              <div className="svc-main">
+                <span className="svc-name">
+                  {r.team.serviceName}
+                  <span className="svc-date">{fmtDateShort(r.date)}</span>
+                </span>
+                <span className="svc-dday">{ddayLabel(r.date, now)}</span>
+              </div>
+              {r.total > 0 ? (
+                <span className="svc-open">
+                  {r.done}/{r.total}
+                </span>
+              ) : (
+                <span className="svc-add">준비팩 추가</span>
+              )}
+            </button>
           </li>
         ))}
       </ul>

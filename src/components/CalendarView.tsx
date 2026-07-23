@@ -65,7 +65,13 @@ export default function CalendarView({ teams, tasks, now, onOpenService, onAddPa
           <p className="cal-month-label">{g.label}</p>
           <div className="card cal-list">
             {g.rows.map((r) => (
-              <div key={`${r.team.id}-${r.iso}`} className="svc-item">
+              <button
+                key={`${r.team.id}-${r.iso}`}
+                className="svc-item"
+                onClick={() =>
+                  r.total > 0 ? onOpenService(r.team.id, r.iso) : onAddPack(r.team.id, r.iso)
+                }
+              >
                 <TeamChip team={r.team} />
                 <div className="svc-main">
                   <span className="svc-name">
@@ -75,15 +81,13 @@ export default function CalendarView({ teams, tasks, now, onOpenService, onAddPa
                   <span className="svc-dday">{ddayLabel(r.date, now)}</span>
                 </div>
                 {r.total > 0 ? (
-                  <button className="svc-open" onClick={() => onOpenService(r.team.id, r.iso)}>
+                  <span className="svc-open">
                     {r.done}/{r.total}
-                  </button>
+                  </span>
                 ) : (
-                  <button className="svc-add" onClick={() => onAddPack(r.team.id, r.iso)}>
-                    준비팩 추가
-                  </button>
+                  <span className="svc-add">준비팩 추가</span>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </section>
