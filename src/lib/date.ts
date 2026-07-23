@@ -39,6 +39,14 @@ export function fmtDateShort(d: Date): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS_KO[d.getDay()]})`;
 }
 
+export function fmtMonthLabel(d: Date): string {
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+}
+
+export function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${d.getMonth()}`;
+}
+
 export function toDateInput(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

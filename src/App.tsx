@@ -5,18 +5,15 @@ import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
 import { pendingSorted } from './lib/priority';
-import {
-  WEEKDAYS_KO,
-  addDays,
-  isInWeek,
-  startOfWeek,
-  thisWeekServiceDate,
-} from './lib/date';
+import { WEEKDAYS_KO, addDays, isInWeek, startOfWeek, thisWeekServiceDate } from './lib/date';
 import Landing from './components/Landing';
 import Header from './components/Header';
-import NextAction from './components/NextAction';
+import PriorityCarousel from './components/PriorityCarousel';
 import Upcoming from './components/Upcoming';
 import UpcomingServices from './components/UpcomingServices';
+import CalendarView from './components/CalendarView';
+import MyPage from './components/MyPage';
+import BottomNav, { type ViewId } from './components/BottomNav';
 import TeamCard from './components/TeamCard';
 import TeamDetail from './components/TeamDetail';
 import WeeklySummary from './components/WeeklySummary';
@@ -35,6 +32,7 @@ export default function App() {
     () => storage.loadTasks() ?? makeSeed(storage.loadTeams() ?? INITIAL_TEAMS),
   );
   const [entered, setEntered] = useState<boolean>(() => storage.loadEntered());
+  const [view, setView] = useState<ViewId>('home');
   const [filter, setFilter] = useState<Filter>('all');
   const [detail, setDetail] = useState<DetailTarget | null>(null);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -59,8 +57,8 @@ export default function App() {
     [weekTasks, filter],
   );
   const pending = useMemo(() => pendingSorted(filteredWeek), [filteredWeek]);
-  const hero = pending[0] ?? null;
-  const upcoming = pending.slice(1, 4);
+  const heroTasks = pending.slice(0, 5);
+  const upcoming = pending.slice(5, 8);
 
   const toggle = (id: string) =>
     setTasks((ts) =>
@@ -111,7 +109,7 @@ export default function App() {
     if (!team) return;
     let service = iso ? new Date(iso) : null;
     if (!service) {
-      for (let w = 0; w < 8; w++) {
+      for (let w = 0; w < 12; w++) {
         const cand = thisWeekServiceDate(team.serviceWeekday, addDays(now, w * 7));
         if (!tasks.some((t) => t.teamId === teamId && t.service === cand.toISOString())) {
           service = cand;
@@ -165,6 +163,7 @@ export default function App() {
       setTeams(INITIAL_TEAMS);
       setTasks(makeSeed(INITIAL_TEAMS));
       setFilter('all');
+      setView('home');
     }
   };
 
@@ -174,71 +173,83 @@ export default function App() {
 
   const detailTeam = detail ? findTeam(teams, detail.teamId) : undefined;
   const visibleTeams = teams.filter((t) => filter === 'all' || t.id === filter);
-  // 이번 주 예배가 있는 팀만 카드로 (추가된 팀은 '다가오는 예배'에서 준비 시작)
+  // 이번 주 예배가 있는 팀만 카드로 (추가된 팀은 캘린더에서 준비 시작)
   const gridTeams = visibleTeams.filter((t) => weekTasks.some((x) => x.teamId === t.id));
 
   return (
     <div className="app">
-      <Header now={now} tasks={weekTasks} />
+      {view === 'home' && (
+        <>
+          <Header now={now} tasks={weekTasks} />
 
-      <nav className="container chips" aria-label="팀 필터">
-        {(['all', ...teams.map((t) => t.id)] as Filter[]).map((f) => (
-          <button
-            key={f}
-            className={`filter-chip${filter === f ? ' active' : ''}`}
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
-          >
-            {f === 'all' ? '전체' : findTeam(teams, f)?.shortName ?? f}
-          </button>
-        ))}
-        <button className="chip-add" aria-label="예배 추가" onClick={() => setAddTeamOpen(true)}>
-          ＋
-        </button>
-      </nav>
+          <nav className="container chips" aria-label="팀 필터">
+            {(['all', ...teams.map((t) => t.id)] as Filter[]).map((f) => (
+              <button
+                key={f}
+                className={`filter-chip${filter === f ? ' active' : ''}`}
+                aria-pressed={filter === f}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? '전체' : findTeam(teams, f)?.shortName ?? f}
+              </button>
+            ))}
+            <button className="chip-add" aria-label="예배 추가" onClick={() => setAddTeamOpen(true)}>
+              ＋
+            </button>
+          </nav>
 
-      <main className="container main">
-        <div className="top-grid">
-          <div className="col">
-            <NextAction task={hero} teams={teams} now={now} onComplete={toggle} onOpenTeam={openTeam} />
-            <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
-          </div>
-          <WeeklySummary tasks={tasks} teams={teams} now={now} />
-        </div>
+          <main className="container main">
+            <div className="top-grid">
+              <div className="col">
+                <PriorityCarousel
+                  tasks={heroTasks}
+                  teams={teams}
+                  now={now}
+                  onComplete={toggle}
+                  onOpenTeam={openTeam}
+                />
+                <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
+              </div>
+              <WeeklySummary tasks={tasks} teams={teams} now={now} />
+            </div>
 
-        <p className="section-label">팀별 준비 현황</p>
-        <div className="team-grid">
-          {gridTeams.map((t) => (
-            <TeamCard
-              key={t.id}
-              team={t}
-              tasks={weekTasks.filter((x) => x.teamId === t.id)}
+            <p className="section-label">팀별 준비 현황</p>
+            <div className="team-grid">
+              {gridTeams.map((t) => (
+                <TeamCard
+                  key={t.id}
+                  team={t}
+                  tasks={weekTasks.filter((x) => x.teamId === t.id)}
+                  now={now}
+                  onOpen={() => openTeam(t.id)}
+                />
+              ))}
+            </div>
+
+            <UpcomingServices
+              teams={visibleTeams}
+              tasks={tasks}
               now={now}
-              onOpen={() => openTeam(t.id)}
+              onOpenService={openService}
+              onViewAll={() => setView('calendar')}
             />
-          ))}
-        </div>
+          </main>
+        </>
+      )}
 
-        <UpcomingServices
-          teams={visibleTeams}
+      {view === 'calendar' && (
+        <CalendarView
+          teams={teams}
           tasks={tasks}
           now={now}
           onOpenService={openService}
           onAddPack={addPack}
         />
-      </main>
+      )}
 
-      <footer className="container footer">
-        <div className="footer-actions">
-          <button className="reset-btn" onClick={() => setEntered(false)}>
-            숨표 소개 다시 보기
-          </button>
-          <button className="reset-btn" onClick={reset}>
-            데모 데이터 초기화
-          </button>
-        </div>
-        <p className="tagline">숨표 — 예배 준비는 보이게, 내 시간에는 숨표를.</p>
-      </footer>
+      {view === 'mypage' && <MyPage onShowIntro={() => setEntered(false)} onReset={reset} />}
+
+      <BottomNav active={view} onChange={setView} />
 
       <button className="fab" aria-label="빠른 추가" onClick={() => setQuickOpen(true)}>
         ＋

@@ -1,4 +1,4 @@
-import type { Task, Team } from '../types';
+import type { Task, Team, TeamId } from '../types';
 import { addDays, ddayLabel, fmtDateShort, startOfDay, thisWeekServiceDate } from '../lib/date';
 import { TeamChip } from './ui';
 
@@ -14,42 +14,34 @@ interface Props {
   teams: Team[];
   tasks: Task[];
   now: Date;
-  weeksAhead?: number;
-  onOpenService: (teamId: string, iso: string) => void;
-  onAddPack: (teamId: string, iso: string) => void;
+  onOpenService: (teamId: TeamId, iso: string) => void;
+  onViewAll: () => void;
 }
 
-export default function UpcomingServices({
-  teams,
-  tasks,
-  now,
-  weeksAhead = 5,
-  onOpenService,
-  onAddPack,
-}: Props) {
+/** 홈 화면용 요약 티저 — 팀당 가장 가까운 예배 1건만. 전체 목록은 캘린더 탭이 담당한다 */
+export default function UpcomingServices({ teams, tasks, now, onOpenService, onViewAll }: Props) {
   const today = startOfDay(now).getTime();
   const rows: Row[] = [];
 
   for (const team of teams) {
-    for (let w = 0; w < weeksAhead; w++) {
+    for (let w = 0; w < 8; w++) {
       const date = thisWeekServiceDate(team.serviceWeekday, addDays(now, w * 7));
-      if (startOfDay(date).getTime() < today) continue; // 지난 예배 제외
+      if (startOfDay(date).getTime() < today) continue;
       const iso = date.toISOString();
       const ts = tasks.filter((t) => t.teamId === team.id && t.service === iso);
       rows.push({ team, date, iso, total: ts.length, done: ts.filter((t) => t.done).length });
+      break; // 팀당 가장 가까운 예배 1건만
     }
   }
-
   rows.sort((a, b) => a.date.getTime() - b.date.getTime());
-  const view = rows.slice(0, 8);
-  if (view.length === 0) return null;
+  if (rows.length === 0) return null;
 
   return (
     <section className="card upcoming-svc">
       <p className="card-label">다가오는 예배</p>
       <ul>
-        {view.map((r) => (
-          <li key={`${r.team.id}-${r.iso}`} className="svc-item">
+        {rows.map((r) => (
+          <li key={r.team.id} className="svc-item">
             <TeamChip team={r.team} />
             <div className="svc-main">
               <span className="svc-name">
@@ -63,13 +55,16 @@ export default function UpcomingServices({
                 {r.done}/{r.total}
               </button>
             ) : (
-              <button className="svc-add" onClick={() => onAddPack(r.team.id, r.iso)}>
+              <button className="svc-add" onClick={onViewAll}>
                 준비팩 추가
               </button>
             )}
           </li>
         ))}
       </ul>
+      <button className="svc-viewall" onClick={onViewAll}>
+        캘린더에서 모두 보기 →
+      </button>
     </section>
   );
 }

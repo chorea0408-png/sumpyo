@@ -88,7 +88,7 @@ a {
 }
 
 .app {
-  padding-bottom: 120px;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 /* ─── 헤더 ─── */
@@ -216,6 +216,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .card-label {
@@ -232,7 +233,57 @@ a {
   margin-bottom: -8px;
 }
 
-/* ─── 가장 먼저 할 일 ─── */
+/* ─── 가장 먼저 할 일 (스와이프 캐러셀) ─── */
+.hero-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.carousel-label {
+  padding: 0 4px;
+}
+
+.hero-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+}
+
+.hero-track::-webkit-scrollbar {
+  display: none;
+}
+
+.hero-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hero-dot {
+  width: 22px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e4ddd0;
+  transition: background 0.18s ease, width 0.18s ease;
+}
+
+.hero-dot.on {
+  background: var(--sage);
+  width: 32px;
+}
+
 .hero {
   padding: 24px;
 }
@@ -545,7 +596,7 @@ a {
 .fab {
   position: fixed;
   right: 20px;
-  bottom: calc(20px + env(safe-area-inset-bottom));
+  bottom: calc(76px + env(safe-area-inset-bottom));
   width: 58px;
   height: 58px;
   border-radius: 999px;
@@ -939,6 +990,49 @@ a {
     border-radius: var(--radius-lg);
     max-height: 86vh;
   }
+
+  .app {
+    padding-bottom: 40px;
+  }
+
+  .fab {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+    justify-content: center;
+    gap: 10px;
+    padding: 28px 0 0;
+  }
+
+  .bn-item {
+    flex: none;
+    flex-direction: row;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 999px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .bn-item.on {
+    background: var(--sage);
+    color: #fbfaf7;
+  }
+
+  .bn-label {
+    font-size: 14px;
+  }
+
+  .calendar-view,
+  .mypage {
+    max-width: 640px;
+    margin: 0 auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1056,6 +1150,138 @@ a {
   font-size: 12.5px;
 }
 
+.svc-viewall {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  color: var(--sage-deep);
+  font-weight: 650;
+  font-size: 13.5px;
+}
+
+/* ─── 하단 탭바 ─── */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  background: var(--card);
+  box-shadow: 0 -2px 16px rgba(29, 29, 31, 0.07);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bn-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 60px;
+  color: var(--ink-3);
+}
+
+.bn-item.on {
+  color: var(--sage-deep);
+}
+
+.bn-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.bn-label {
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* ─── 캘린더 탭 ─── */
+.calendar-view {
+  padding-top: 28px;
+}
+
+.cal-title {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.cal-sub {
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.cal-month {
+  margin-top: 24px;
+}
+
+.cal-month-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  margin-bottom: 8px;
+}
+
+.cal-list {
+  padding: 4px 16px;
+}
+
+.cal-list .svc-item:last-child {
+  border-bottom: 0;
+}
+
+/* ─── 마이페이지 ─── */
+.mypage {
+  padding-top: 28px;
+}
+
+.mypage-title {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin-bottom: 22px;
+}
+
+.mypage-section {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mypage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 14px;
+  font-size: 15.5px;
+  font-weight: 600;
+  border-bottom: 1px solid #f3efe7;
+}
+
+.mypage-row:last-child {
+  border-bottom: 0;
+}
+
+.mypage-danger {
+  color: var(--coral-deep);
+}
+
+.mypage-arrow {
+  color: var(--ink-3);
+  font-size: 18px;
+}
+
+.mypage-tagline {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
 /* ─── 준비팩 빈 상태 ─── */
 .pack-empty {
   text-align: center;
@@ -1121,70 +1347,37 @@ a {
   font-weight: 600;
 }
 
-.landing-lead {
-  margin-top: 26px;
-  color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1.7;
-}
-
-.landing-lead b {
-  color: var(--ink);
-  font-weight: 700;
-}
-
 .landing-points {
-  margin-top: 26px;
+  margin-top: 40px;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 12px;
-  text-align: left;
 }
 
 .landing-point {
+  flex: 1;
+  max-width: 130px;
   display: flex;
-  gap: 14px;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
   background: var(--card);
   border-radius: 18px;
-  padding: 16px 18px;
+  padding: 18px 10px;
   box-shadow: var(--shadow);
 }
 
 .lp-icon {
-  font-size: 24px;
-  flex: none;
+  font-size: 26px;
 }
 
 .lp-title {
   font-weight: 700;
-  font-size: 15.5px;
-}
-
-.lp-desc {
   font-size: 13.5px;
-  color: var(--ink-2);
-  margin-top: 2px;
-}
-
-.landing-diff {
-  margin-top: 22px;
-  background: var(--sage-soft);
-  color: var(--sage-deep);
-  border-radius: 16px;
-  padding: 16px 18px;
-  font-size: 13.5px;
-  line-height: 1.65;
-  text-align: left;
-}
-
-.landing-diff b {
-  color: var(--sage-deep);
-  font-weight: 750;
 }
 
 .landing-cta {
-  margin-top: 26px;
+  margin-top: 36px;
   width: 100%;
   height: 54px;
   font-size: 16px;
