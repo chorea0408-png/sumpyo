@@ -1526,6 +1526,14 @@ a {
   letter-spacing: 0.01em;
 }
 
+.landing-mark {
+  width: 68px;
+  height: 68px;
+  margin: 18px auto 0;
+  display: block;
+  border-radius: 18px;
+}
+
 .landing-logo {
   font-size: 56px;
   font-weight: 800;

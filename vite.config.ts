@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['breath.svg'],
+        includeAssets: ['apple-touch-icon.png', 'favicon-48.png'],
         manifest: {
           name: '숨표 — 예배 준비는 보이게',
           short_name: '숨표',
@@ -22,16 +22,14 @@ export default defineConfig(({ mode }) => {
           background_color: '#F7F4EE',
           theme_color: '#F7F4EE',
           icons: [
-            {
-              src: 'breath.svg',
-              type: 'image/svg+xml',
-              sizes: 'any',
-              purpose: 'any maskable',
-            },
+            { src: 'pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,ico}'],
+          globPatterns: ['**/*.{js,css,html,png,ico}'],
         },
       }),
     ],

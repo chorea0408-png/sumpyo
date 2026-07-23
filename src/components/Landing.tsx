@@ -17,6 +17,7 @@ export default function Landing({ hasData, onContinue, onEnterDemo, onEnterFresh
     <div className="landing">
       <div className="landing-inner">
         <p className="landing-eyebrow">여러 찬양팀을 병행하는 인도자를 위해</p>
+        <img src="/pwa-192.png" alt="" aria-hidden="true" className="landing-mark" />
         <h1 className="landing-logo">숨표</h1>
         <p className="landing-tagline">예배 준비는 보이게, 내 시간에는 숨표를.</p>
 
