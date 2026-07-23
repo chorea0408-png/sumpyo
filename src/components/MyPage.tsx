@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import type { Profile, Task, Team, TeamId } from '../types';
+import type { LineupAssignment, Profile, Task, Team, TeamId } from '../types';
 import { exportBackup, parseBackup, readFileAsText } from '../lib/backup';
 import { TeamChip } from './ui';
 
@@ -7,12 +7,13 @@ interface Props {
   teams: Team[];
   tasks: Task[];
   profile: Profile;
+  lineup: LineupAssignment[];
   onSaveProfile: (p: Profile) => void;
   onShowIntro: () => void;
   onReset: () => void;
   onAddTeam: () => void;
-  onEditTeam: (teamId: TeamId) => void;
-  onImport: (teams: Team[], tasks: Task[], profile: Profile | null) => void;
+  onManageTeam: (teamId: TeamId) => void;
+  onImport: (teams: Team[], tasks: Task[], profile: Profile | null, lineup: LineupAssignment[]) => void;
 }
 
 type ImportState = 'idle' | 'ok' | 'fail';
@@ -21,11 +22,12 @@ export default function MyPage({
   teams,
   tasks,
   profile,
+  lineup,
   onSaveProfile,
   onShowIntro,
   onReset,
   onAddTeam,
-  onEditTeam,
+  onManageTeam,
   onImport,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -46,7 +48,7 @@ export default function MyPage({
       return;
     }
     if (window.confirm(`백업 파일에는 팀 ${result.teams.length}개, 업무 ${result.tasks.length}건이 있어요. 지금 데이터를 덮어쓸까요?`)) {
-      onImport(result.teams, result.tasks, result.profile);
+      onImport(result.teams, result.tasks, result.profile, result.lineup);
       setImportState('ok');
       setImportMsg('불러오기 완료');
     }
@@ -83,7 +85,7 @@ export default function MyPage({
       <p className="mypage-section-label">팀 관리</p>
       <section className="card mypage-section">
         {teams.map((t) => (
-          <button key={t.id} className="mypage-row" onClick={() => onEditTeam(t.id)}>
+          <button key={t.id} className="mypage-row" onClick={() => onManageTeam(t.id)}>
             <span className="mypage-team-row">
               <TeamChip team={t} />
               <span>{t.serviceName}</span>
@@ -98,7 +100,7 @@ export default function MyPage({
 
       <p className="mypage-section-label">데이터</p>
       <section className="card mypage-section">
-        <button className="mypage-row" onClick={() => exportBackup(teams, tasks, profile)}>
+        <button className="mypage-row" onClick={() => exportBackup(teams, tasks, profile, lineup)}>
           <span>데이터 내보내기 (백업 파일)</span>
           <span className="mypage-arrow">›</span>
         </button>

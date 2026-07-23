@@ -1,4 +1,4 @@
-import type { Profile, Task, Team } from '../types';
+import type { LineupAssignment, Profile, Task, Team } from '../types';
 
 const BACKUP_VERSION = 1;
 
@@ -9,6 +9,7 @@ interface BackupFile {
   teams: Team[];
   tasks: Task[];
   profile?: Profile;
+  lineup?: LineupAssignment[];
 }
 
 function fmtStamp(d: Date): string {
@@ -16,7 +17,7 @@ function fmtStamp(d: Date): string {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
 }
 
-export function exportBackup(teams: Team[], tasks: Task[], profile?: Profile): void {
+export function exportBackup(teams: Team[], tasks: Task[], profile?: Profile, lineup?: LineupAssignment[]): void {
   const payload: BackupFile = {
     app: 'sumpyo',
     version: BACKUP_VERSION,
@@ -24,6 +25,7 @@ export function exportBackup(teams: Team[], tasks: Task[], profile?: Profile): v
     teams,
     tasks,
     profile,
+    lineup,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -37,7 +39,7 @@ export function exportBackup(teams: Team[], tasks: Task[], profile?: Profile): v
 }
 
 export type ImportResult =
-  | { ok: true; teams: Team[]; tasks: Task[]; profile: Profile | null }
+  | { ok: true; teams: Team[]; tasks: Task[]; profile: Profile | null; lineup: LineupAssignment[] }
   | { ok: false; error: string };
 
 function isTeam(x: unknown): x is Team {
@@ -58,6 +60,12 @@ function isTask(x: unknown): x is Task {
   return typeof t.id === 'string' && typeof t.teamId === 'string' && typeof t.due === 'string';
 }
 
+function isLineupAssignment(x: unknown): x is LineupAssignment {
+  if (!x || typeof x !== 'object') return false;
+  const a = x as Record<string, unknown>;
+  return typeof a.id === 'string' && typeof a.teamId === 'string' && typeof a.memberId === 'string';
+}
+
 /** 백업 파일 읽기 — 형식이 다르면 실패 사유를 그대로 반환한다 */
 export function parseBackup(raw: string): ImportResult {
   let data: unknown;
@@ -76,7 +84,8 @@ export function parseBackup(raw: string): ImportResult {
     return { ok: false, error: '업무 데이터가 손상되었어요' };
   }
   const profile = isProfile(d.profile) ? d.profile : null;
-  return { ok: true, teams: d.teams, tasks: d.tasks, profile };
+  const lineup = Array.isArray(d.lineup) ? d.lineup.filter(isLineupAssignment) : [];
+  return { ok: true, teams: d.teams, tasks: d.tasks, profile, lineup };
 }
 
 export function readFileAsText(file: File): Promise<string> {

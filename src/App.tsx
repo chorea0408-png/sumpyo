@@ -1,11 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Profile, Task, Team, TeamId } from './types';
+import type {
+  LineupAssignment,
+  LineupSlot,
+  Profile,
+  Task,
+  Team,
+  TeamId,
+  TeamMember,
+  TemplateStep,
+} from './types';
 import { INITIAL_TEAMS, findTeam, nextColor } from './data/teams';
 import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
 import { pendingSorted } from './lib/priority';
-import { WEEKDAYS_KO, addDays, isInWeek, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
+import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfWeek, thisWeekServiceDate } from './lib/date';
+import { toAssignments, type LineupPick } from './lib/lineup';
 import Landing from './components/Landing';
 import EmptyHome from './components/EmptyHome';
 import Header from './components/Header';
@@ -20,6 +30,7 @@ import TeamDetail from './components/TeamDetail';
 import WeeklySummary from './components/WeeklySummary';
 import QuickAdd from './components/QuickAdd';
 import TeamForm, { type TeamFormValues } from './components/TeamForm';
+import TeamManage, { type BasicInfo } from './components/TeamManage';
 import UndoToast from './components/UndoToast';
 import Celebration from './components/Celebration';
 
@@ -28,7 +39,6 @@ interface DetailTarget {
   teamId: TeamId;
   service: string;
 }
-type TeamFormState = { mode: 'add' } | { mode: 'edit'; teamId: TeamId } | null;
 
 export default function App() {
   // 저장된 데이터가 없으면 빈 배열로 시작 — 랜딩에서 데모/신규 시작을 선택하기 전까지는 채우지 않는다
@@ -39,18 +49,21 @@ export default function App() {
   const [filter, setFilter] = useState<Filter>('all');
   const [detail, setDetail] = useState<DetailTarget | null>(null);
   const [quickOpen, setQuickOpen] = useState(false);
-  const [teamForm, setTeamForm] = useState<TeamFormState>(null);
+  const [addTeamOpen, setAddTeamOpen] = useState(false);
+  const [teamManageId, setTeamManageId] = useState<TeamId | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const undoTimer = useRef<number | null>(null);
   const [celebration, setCelebration] = useState<string | null>(null);
   const celebrationTimer = useRef<number | null>(null);
   const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
+  const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
   useEffect(() => storage.saveTeams(teams), [teams]);
   useEffect(() => storage.saveEntered(entered), [entered]);
   useEffect(() => storage.saveProfile(profile), [profile]);
+  useEffect(() => storage.saveLineup(lineup), [lineup]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -100,14 +113,10 @@ export default function App() {
   const heroTasks = pending.slice(0, 5);
   const upcoming = pending.slice(5, 8);
 
-  /** 전체 팀 중 가장 가까운 다음 예배 (헤더 D-day 강조용) — 오늘 포함, 이번 주에 이미 지난 예배는 다음 주로 */
+  /** 전체 팀 중 가장 가까운 다음 예배 (헤더 D-day 강조용) */
   const nextServiceDday = useMemo(() => {
     if (teams.length === 0) return null;
-    const today = startOfDay(now).getTime();
-    const candidates = teams.map((t) => {
-      const thisWeek = thisWeekServiceDate(t.serviceWeekday, now);
-      return thisWeek.getTime() >= today ? thisWeek : thisWeekServiceDate(t.serviceWeekday, addDays(now, 7));
-    });
+    const candidates = teams.map((t) => nextServiceOn(t.serviceWeekday, now));
     return candidates.reduce((min, d) => (d < min ? d : min), candidates[0]);
   }, [teams, now]);
 
@@ -178,7 +187,7 @@ export default function App() {
     );
   };
 
-  /** 예배 주간 준비팩(12단계) 추가 — service 지정 시 그 주, 아니면 가장 가까운 빈 주 */
+  /** 예배 주간 준비팩 추가 — service 지정 시 그 주, 아니면 가장 가까운 빈 주 */
   const addPack = (teamId: TeamId, iso?: string) => {
     const team = findTeam(teams, teamId);
     if (!team) return;
@@ -212,13 +221,11 @@ export default function App() {
       pastorLabel: values.pastorLabel,
       color: nextColor(teams.length),
       custom: true,
-      members: values.members,
+      members: [],
     };
     setTeams((ts) => [...ts, team]);
     // 이번 주 예배가 아직 남아 있으면 이번 주부터, 이미 지났으면 다음 주부터 (과거로 backfill만 방지)
-    const today = startOfDay(now).getTime();
-    const thisService = thisWeekServiceDate(values.weekday, now);
-    const firstService = thisService.getTime() >= today ? thisService : addDays(thisService, 7);
+    const firstService = nextServiceOn(values.weekday, now);
     const secondService = addDays(firstService, 7);
     setTasks((ts) => [
       ...ts,
@@ -227,7 +234,7 @@ export default function App() {
     ]);
   };
 
-  const updateTeam = (teamId: TeamId, values: TeamFormValues) => {
+  const updateTeamBasic = (teamId: TeamId, values: BasicInfo) => {
     setTeams((ts) =>
       ts.map((t) =>
         t.id === teamId
@@ -240,11 +247,28 @@ export default function App() {
               serviceWeekday: values.weekday,
               pastorLabel: values.pastorLabel,
               songCount: values.songCount,
-              members: values.members,
             }
           : t,
       ),
     );
+  };
+
+  const updateTeamMembers = (teamId: TeamId, members: TeamMember[]) => {
+    setTeams((ts) => ts.map((t) => (t.id === teamId ? { ...t, members } : t)));
+  };
+
+  const updateTeamLineupSlots = (teamId: TeamId, slots: LineupSlot[] | undefined) => {
+    setTeams((ts) => ts.map((t) => (t.id === teamId ? { ...t, lineupSlots: slots } : t)));
+  };
+
+  const updateTeamTemplate = (teamId: TeamId, template: TemplateStep[] | undefined) => {
+    setTeams((ts) => ts.map((t) => (t.id === teamId ? { ...t, customTemplate: template } : t)));
+  };
+
+  /** 라인업 확정 — 같은 팀·같은 예배에 대한 기존 확정 기록은 갈아끼운다 */
+  const confirmLineup = (teamId: TeamId, service: string, picks: LineupPick[]) => {
+    const fresh = toAssignments(teamId, service, picks);
+    setLineup((ls) => [...ls.filter((a) => !(a.teamId === teamId && a.service === service)), ...fresh]);
   };
 
   const deleteTeam = (teamId: TeamId) => {
@@ -253,14 +277,21 @@ export default function App() {
     if (!window.confirm(`${team.name}을(를) 삭제할까요? 이 팀의 모든 업무 기록도 함께 사라져요.`)) return;
     setTeams((ts) => ts.filter((t) => t.id !== teamId));
     setTasks((ts) => ts.filter((t) => t.teamId !== teamId));
+    setLineup((ls) => ls.filter((a) => a.teamId !== teamId));
     if (filter === teamId) setFilter('all');
-    setTeamForm(null);
+    setTeamManageId(null);
   };
 
-  const importBackup = (importedTeams: Team[], importedTasks: Task[], importedProfile: Profile | null) => {
+  const importBackup = (
+    importedTeams: Team[],
+    importedTasks: Task[],
+    importedProfile: Profile | null,
+    importedLineup: LineupAssignment[],
+  ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
     if (importedProfile) setProfile(importedProfile);
+    setLineup(importedLineup);
     setFilter('all');
   };
 
@@ -276,8 +307,10 @@ export default function App() {
       storage.clearData();
       setTeams(INITIAL_TEAMS);
       setTasks(makeSeed(INITIAL_TEAMS));
+      setLineup([]);
       setFilter('all');
       setView('home');
+      setTeamManageId(null);
     }
   };
 
@@ -297,9 +330,28 @@ export default function App() {
           storage.clearData();
           setTeams([]);
           setTasks([]);
+          setLineup([]);
           setEntered(true);
-          setTeamForm({ mode: 'add' });
+          setAddTeamOpen(true);
         }}
+      />
+    );
+  }
+
+  const manageTeam = teamManageId ? findTeam(teams, teamManageId) : undefined;
+  if (manageTeam) {
+    return (
+      <TeamManage
+        team={manageTeam}
+        now={now}
+        history={lineup}
+        onBack={() => setTeamManageId(null)}
+        onUpdateBasic={(values) => updateTeamBasic(manageTeam.id, values)}
+        onUpdateMembers={(members) => updateTeamMembers(manageTeam.id, members)}
+        onUpdateLineupSlots={(slots) => updateTeamLineupSlots(manageTeam.id, slots)}
+        onConfirmLineup={(service, picks) => confirmLineup(manageTeam.id, service, picks)}
+        onUpdateTemplate={(tpl) => updateTeamTemplate(manageTeam.id, tpl)}
+        onDelete={() => deleteTeam(manageTeam.id)}
       />
     );
   }
@@ -308,14 +360,12 @@ export default function App() {
   const visibleTeams = teams.filter((t) => filter === 'all' || t.id === filter);
   // 이번 주 예배가 있는 팀만 카드로 (추가된 팀은 캘린더에서 준비 시작)
   const gridTeams = visibleTeams.filter((t) => weekTasks.some((x) => x.teamId === t.id));
-  const editingTeam =
-    teamForm?.mode === 'edit' ? findTeam(teams, teamForm.teamId) : undefined;
 
   return (
     <div className="app">
       {view === 'home' &&
         (teams.length === 0 ? (
-          <EmptyHome onAddTeam={() => setTeamForm({ mode: 'add' })} />
+          <EmptyHome onAddTeam={() => setAddTeamOpen(true)} />
         ) : (
           <>
             <Header
@@ -336,7 +386,7 @@ export default function App() {
                   {f === 'all' ? '전체' : findTeam(teams, f)?.shortName ?? f}
                 </button>
               ))}
-              <button className="chip-add" aria-label="예배 추가" onClick={() => setTeamForm({ mode: 'add' })}>
+              <button className="chip-add" aria-label="예배 추가" onClick={() => setAddTeamOpen(true)}>
                 ＋
               </button>
             </nav>
@@ -395,11 +445,12 @@ export default function App() {
           teams={teams}
           tasks={tasks}
           profile={profile}
+          lineup={lineup}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
           onReset={reset}
-          onAddTeam={() => setTeamForm({ mode: 'add' })}
-          onEditTeam={(teamId) => setTeamForm({ mode: 'edit', teamId })}
+          onAddTeam={() => setAddTeamOpen(true)}
+          onManageTeam={(teamId) => setTeamManageId(teamId)}
           onImport={importBackup}
         />
       )}
@@ -436,16 +487,13 @@ export default function App() {
         />
       )}
 
-      {teamForm && (
+      {addTeamOpen && (
         <TeamForm
-          team={editingTeam}
           onSave={(values) => {
-            if (teamForm.mode === 'add') addTeam(values);
-            else updateTeam(teamForm.teamId, values);
-            setTeamForm(null);
+            addTeam(values);
+            setAddTeamOpen(false);
           }}
-          onDelete={teamForm.mode === 'edit' ? () => deleteTeam(teamForm.teamId) : undefined}
-          onClose={() => setTeamForm(null)}
+          onClose={() => setAddTeamOpen(false)}
         />
       )}
 

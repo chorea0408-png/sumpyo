@@ -58,6 +58,13 @@ export function thisWeekServiceDate(weekday: number, now: Date = new Date()): Da
   return addDays(monday, offset);
 }
 
+/** 그 요일의 다음 예배일 — 이번 주 그 요일이 아직 안 지났으면 이번 주, 이미 지났으면 다음 주 */
+export function nextServiceOn(weekday: number, now: Date = new Date()): Date {
+  const today = startOfDay(now).getTime();
+  const thisWeek = thisWeekServiceDate(weekday, now);
+  return thisWeek.getTime() >= today ? thisWeek : addDays(thisWeek, 7);
+}
+
 /** 마감/예배가 특정 주(월~일)에 속하는지 */
 export function isInWeek(iso: string, weekStart: Date): boolean {
   const t = new Date(iso).getTime();

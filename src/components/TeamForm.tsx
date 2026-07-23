@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { Team } from '../types';
 import { WEEKDAYS_KO } from '../lib/date';
 
 export interface TeamFormValues {
@@ -8,39 +7,20 @@ export interface TeamFormValues {
   weekday: number;
   pastorLabel: string;
   songCount: number;
-  members: string[];
 }
 
 interface Props {
-  /** 있으면 편집 모드, 없으면 새 예배 추가 모드 */
-  team?: Team;
   onSave: (values: TeamFormValues) => void;
-  onDelete?: () => void;
   onClose: () => void;
 }
 
-export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
-  const editing = !!team;
-  const [shortName, setShortName] = useState(team?.shortName ?? '');
-  const [serviceName, setServiceName] = useState(team?.serviceName ?? '주일예배');
-  const [weekday, setWeekday] = useState(team?.serviceWeekday ?? 0);
-  const [pastorLabel, setPastorLabel] = useState(team?.pastorLabel ?? '목사님');
-  const [songCount, setSongCount] = useState(team?.songCount ?? 4);
-  const [members, setMembers] = useState<string[]>(team?.members ?? []);
-  const [memberInput, setMemberInput] = useState('');
+export default function TeamForm({ onSave, onClose }: Props) {
+  const [shortName, setShortName] = useState('');
+  const [serviceName, setServiceName] = useState('주일예배');
+  const [weekday, setWeekday] = useState(0);
+  const [pastorLabel, setPastorLabel] = useState('목사님');
+  const [songCount, setSongCount] = useState(4);
   const nameInputRef = useRef<HTMLInputElement>(null);
-
-  const addMember = () => {
-    const name = memberInput.trim();
-    if (!name) return;
-    setMembers((m) => [...m, name]);
-    setMemberInput('');
-  };
-  const removeMember = (i: number, name: string) => {
-    if (window.confirm(`${name}님을 명단에서 삭제할까요?`)) {
-      setMembers((m) => m.filter((_, idx) => idx !== i));
-    }
-  };
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -65,7 +45,6 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
       weekday,
       pastorLabel: pastorLabel.trim() || '목사님',
       songCount: Math.max(1, songCount),
-      members,
     });
   };
 
@@ -76,9 +55,9 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <section className="sheet sheet-compact" role="dialog" aria-modal="true" aria-label={editing ? '예배 편집' : '예배 추가'}>
+      <section className="sheet sheet-compact" role="dialog" aria-modal="true" aria-label="예배 추가">
         <header className="sheet-head">
-          <h3 className="sheet-title">{editing ? '예배 편집' : '예배 추가'}</h3>
+          <h3 className="sheet-title">예배 추가</h3>
           <button className="icon-btn" aria-label="닫기" onClick={onClose}>
             ✕
           </button>
@@ -144,57 +123,17 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
             </button>
           </div>
 
-          {editing && (
-            <>
-              <p className="field-label">팀원 명단</p>
-              <div className="member-add-row">
-                <input
-                  className="text-input full"
-                  value={memberInput}
-                  onChange={(e) => setMemberInput(e.target.value)}
-                  placeholder="이름 입력 후 추가"
-                  aria-label="팀원 이름"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addMember();
-                    }
-                  }}
-                />
-                <button type="button" className="member-add-btn" onClick={addMember}>
-                  추가
-                </button>
-              </div>
-              {members.length > 0 && (
-                <ul className="member-list">
-                  {members.map((m, i) => (
-                    <li key={`${m}-${i}`} className="member-chip">
-                      {m}
-                      <button type="button" aria-label={`${m} 삭제`} onClick={() => removeMember(i, m)}>
-                        ✕
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
-
-          {!editing && <p className="add-team-hint">추가하면 이번 주·다음 주 준비팩이 자동으로 채워져요.</p>}
+          <p className="add-team-hint">
+            추가하면 이번 주·다음 주 준비팩이 자동으로 채워져요. 팀원·역할·라인업은 마이페이지에서 이어서 등록할 수 있어요.
+          </p>
 
           <button
             className="btn btn-primary full submit-gap"
             type="submit"
             disabled={!shortName.trim() || !serviceName.trim()}
           >
-            {editing ? '저장하기' : '추가하기'}
+            추가하기
           </button>
-
-          {editing && onDelete && (
-            <button type="button" className="edit-delete full delete-gap" onClick={onDelete}>
-              이 팀 삭제하기
-            </button>
-          )}
         </form>
       </section>
     </div>

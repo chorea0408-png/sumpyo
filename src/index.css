@@ -1216,7 +1216,8 @@ a {
   }
 
   .calendar-view,
-  .mypage {
+  .mypage,
+  .teammanage {
     max-width: 640px;
     margin: 0 auto;
   }
@@ -1952,4 +1953,270 @@ a {
   margin-top: 14px;
   font-size: 12.5px;
   color: var(--ink-3);
+}
+
+/* ─── 팀 관리 풀페이지 (TeamManage) ─── */
+.teammanage {
+  padding-top: 28px;
+}
+
+.tm-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.tm-title {
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.tm-basic,
+.tm-members,
+.tm-lineup,
+.tm-template {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tm-delete {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+  min-height: 56px;
+  color: var(--coral-deep);
+  font-weight: 650;
+}
+
+/* ─── 팀원 & 역할 ─── */
+.member-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.member-role-row {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.member-role-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.member-role-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.member-role-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.member-role-head button {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-role-head button:hover {
+  background: var(--coral-soft);
+  color: var(--coral-deep);
+}
+
+.role-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-chip {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.role-chip.active {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+  color: var(--sage-deep);
+}
+
+/* ─── 라인업 ─── */
+.lineup-slots-config {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.lineup-slots-config summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--sage-deep);
+}
+
+.slots-grid {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slot-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lineup-service {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.lineup-empty {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.lineup-confirmed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lineup-confirmed-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.lineup-role-label {
+  font-weight: 700;
+  color: var(--ink);
+  flex: none;
+}
+
+.lineup-names {
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.lineup-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lineup-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lineup-select {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.lineup-none {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ─── 준비팩 템플릿 편집 ─── */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-order {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: none;
+}
+
+.tmpl-move {
+  width: 22px;
+  height: 18px;
+  border-radius: 6px;
+  font-size: 9px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmpl-move:hover:not(:disabled) {
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+}
+
+.template-title-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.template-timing {
+  flex: none;
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.tmpl-remove {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmpl-remove:hover {
+  background: var(--coral-soft);
+  color: var(--coral-deep);
+}
+
+.template-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.template-num {
+  flex: 1 1 64px;
+  min-width: 0;
+  text-align: center;
 }

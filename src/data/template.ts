@@ -1,19 +1,12 @@
-import type { Task, Team, TaskLink } from '../types';
+import type { Task, TaskLink, Team, TemplateStep } from '../types';
 import { addDays } from '../lib/date';
 
 const REF: TaskLink = { label: '레퍼런스 음원', url: 'https://www.youtube.com' };
 const SHEET: TaskLink = { label: '악보 시트', url: 'https://docs.google.com' };
 
-export interface TemplateStep {
-  key: string;
-  title: string;
-  /** 예배일로부터 며칠 전 마감 */
-  before: number;
-  h: number;
-  link?: TaskLink;
-}
+export type { TemplateStep };
 
-/** 예배마다 매주 반복되는 준비 루틴 — '통합팩'의 실체 */
+/** 예배마다 매주 반복되는 준비 루틴 — '통합팩'의 실체 (팀이 따로 편집하지 않았을 때 기본값) */
 export const WORSHIP_TEMPLATE: TemplateStep[] = [
   { key: 'meditation', title: '묵상 · 예배 주제 정리', before: 6, h: 21 },
   { key: 'conti', title: '콘티 선정', before: 5, h: 21, link: REF },
@@ -42,7 +35,7 @@ function dueAt(serviceDate: Date, before: number, h: number): string {
   return d.toISOString();
 }
 
-/** 한 예배(=한 주)의 준비 업무 12건을 통째로 생성 */
+/** 한 예배(=한 주)의 준비 업무를 통째로 생성 — 팀이 준비팩을 따로 편집했으면 그 템플릿을, 아니면 기본값을 쓴다 */
 export function makeWeekTasks(
   team: Team,
   serviceDate: Date,
@@ -50,7 +43,8 @@ export function makeWeekTasks(
 ): Task[] {
   const doneCount = opts.doneCount ?? 0;
   const service = serviceDate.toISOString();
-  return WORSHIP_TEMPLATE.map((step, i) => {
+  const template = team.customTemplate && team.customTemplate.length > 0 ? team.customTemplate : WORSHIP_TEMPLATE;
+  return template.map((step, i) => {
     const due = dueAt(serviceDate, step.before, step.h);
     const done = i < doneCount;
     return {
