@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Task, Team, TeamId } from './types';
+import type { Profile, Task, Team, TeamId } from './types';
 import { INITIAL_TEAMS, findTeam, nextColor } from './data/teams';
 import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
@@ -21,6 +21,7 @@ import WeeklySummary from './components/WeeklySummary';
 import QuickAdd from './components/QuickAdd';
 import TeamForm, { type TeamFormValues } from './components/TeamForm';
 import UndoToast from './components/UndoToast';
+import Celebration from './components/Celebration';
 
 type Filter = TeamId | 'all';
 interface DetailTarget {
@@ -42,10 +43,14 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const undoTimer = useRef<number | null>(null);
+  const [celebration, setCelebration] = useState<string | null>(null);
+  const celebrationTimer = useRef<number | null>(null);
+  const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
   useEffect(() => storage.saveTeams(teams), [teams]);
   useEffect(() => storage.saveEntered(entered), [entered]);
+  useEffect(() => storage.saveProfile(profile), [profile]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -125,6 +130,20 @@ export default function App() {
     } else {
       setUndo(null);
     }
+
+    // 이 토글로 해당 팀·예배의 마지막 남은 업무가 채워져 0%→100%가 됐는지 감지
+    if (willComplete && target?.service) {
+      const siblings = tasks.filter((t) => t.teamId === target.teamId && t.service === target.service);
+      const nowAllDone = siblings.length > 0 && siblings.every((t) => t.id === id || t.done);
+      if (nowAllDone) {
+        const team = findTeam(teams, target.teamId);
+        if (team) {
+          if (celebrationTimer.current) window.clearTimeout(celebrationTimer.current);
+          setCelebration(team.name);
+          celebrationTimer.current = window.setTimeout(() => setCelebration(null), 2500);
+        }
+      }
+    }
   };
 
   const addTask = (title: string, teamId: TeamId, dateStr: string) => {
@@ -193,6 +212,7 @@ export default function App() {
       pastorLabel: values.pastorLabel,
       color: nextColor(teams.length),
       custom: true,
+      members: values.members,
     };
     setTeams((ts) => [...ts, team]);
     // 이번 주 예배가 아직 남아 있으면 이번 주부터, 이미 지났으면 다음 주부터 (과거로 backfill만 방지)
@@ -220,6 +240,7 @@ export default function App() {
               serviceWeekday: values.weekday,
               pastorLabel: values.pastorLabel,
               songCount: values.songCount,
+              members: values.members,
             }
           : t,
       ),
@@ -296,7 +317,12 @@ export default function App() {
           <EmptyHome onAddTeam={() => setTeamForm({ mode: 'add' })} />
         ) : (
           <>
-            <Header now={now} tasks={weekTasks} nextServiceDate={nextServiceDday} />
+            <Header
+              now={now}
+              tasks={weekTasks}
+              nextServiceDate={nextServiceDday}
+              profileName={profile.name || undefined}
+            />
 
             <nav className="container chips" aria-label="팀 필터">
               {(['all', ...teams.map((t) => t.id)] as Filter[]).map((f) => (
@@ -367,6 +393,8 @@ export default function App() {
         <MyPage
           teams={teams}
           tasks={tasks}
+          profile={profile}
+          onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
           onReset={reset}
           onAddTeam={() => setTeamForm({ mode: 'add' })}
@@ -392,6 +420,8 @@ export default function App() {
           }}
         />
       )}
+
+      {celebration && <Celebration teamName={celebration} onClose={() => setCelebration(null)} />}
 
       {quickOpen && teams.length > 0 && (
         <QuickAdd

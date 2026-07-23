@@ -1,8 +1,9 @@
-import type { Task, Team } from '../types';
+import type { Profile, Task, Team } from '../types';
 
 const K_TASKS = 'sumpyo.v1';
 const K_TEAMS = 'sumpyo.teams.v1';
 const K_ENTERED = 'sumpyo.entered.v1';
+const K_PROFILE = 'sumpyo.profile.v1';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -30,6 +31,9 @@ export const saveTeams = (t: Team[]) => write(K_TEAMS, t);
 
 export const loadEntered = () => read<boolean>(K_ENTERED, false);
 export const saveEntered = (v: boolean) => write(K_ENTERED, v);
+
+export const loadProfile = () => read<Profile | null>(K_PROFILE, null);
+export const saveProfile = (p: Profile) => write(K_PROFILE, p);
 
 /** 데모 데이터 초기화 — 진입 여부(entered)는 유지 */
 export function clearData(): void {

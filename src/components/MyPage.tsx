@@ -1,11 +1,13 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import type { Task, Team, TeamId } from '../types';
+import type { Profile, Task, Team, TeamId } from '../types';
 import { exportBackup, parseBackup, readFileAsText } from '../lib/backup';
 import { TeamChip } from './ui';
 
 interface Props {
   teams: Team[];
   tasks: Task[];
+  profile: Profile;
+  onSaveProfile: (p: Profile) => void;
   onShowIntro: () => void;
   onReset: () => void;
   onAddTeam: () => void;
@@ -18,6 +20,8 @@ type ImportState = 'idle' | 'ok' | 'fail';
 export default function MyPage({
   teams,
   tasks,
+  profile,
+  onSaveProfile,
   onShowIntro,
   onReset,
   onAddTeam,
@@ -51,6 +55,30 @@ export default function MyPage({
   return (
     <div className="container main mypage">
       <h1 className="mypage-title">마이페이지</h1>
+
+      <p className="mypage-section-label">내 프로필</p>
+      <section className="card mypage-section mypage-profile">
+        <label className="profile-field">
+          <span className="field-label">이름</span>
+          <input
+            className="text-input full"
+            value={profile.name}
+            onChange={(e) => onSaveProfile({ ...profile, name: e.target.value })}
+            placeholder="예) 김인도"
+            aria-label="이름"
+          />
+        </label>
+        <label className="profile-field">
+          <span className="field-label">소속 교회</span>
+          <input
+            className="text-input full"
+            value={profile.church}
+            onChange={(e) => onSaveProfile({ ...profile, church: e.target.value })}
+            placeholder="예) 은혜교회"
+            aria-label="소속 교회"
+          />
+        </label>
+      </section>
 
       <p className="mypage-section-label">팀 관리</p>
       <section className="card mypage-section">

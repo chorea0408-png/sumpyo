@@ -3,20 +3,22 @@ import { ddayLabel, fmtDateLine } from '../lib/date';
 import { dueToday, overdue } from '../lib/priority';
 import { ProgressBar } from './ui';
 
-function greeting(hour: number): string {
-  if (hour >= 5 && hour < 11) return '좋은 아침이에요, 인도자님';
-  if (hour < 17) return '좋은 오후예요, 인도자님';
-  if (hour < 22) return '오늘도 수고했어요, 인도자님';
-  return '고요한 밤이에요, 인도자님';
+function greeting(hour: number, name?: string): string {
+  const suffix = name ? `${name}님` : '인도자님';
+  if (hour >= 5 && hour < 11) return `좋은 아침이에요, ${suffix}`;
+  if (hour < 17) return `좋은 오후예요, ${suffix}`;
+  if (hour < 22) return `오늘도 수고했어요, ${suffix}`;
+  return `고요한 밤이에요, ${suffix}`;
 }
 
 interface Props {
   now: Date;
   tasks: Task[];
   nextServiceDate: Date | null;
+  profileName?: string;
 }
 
-export default function Header({ now, tasks, nextServiceDate }: Props) {
+export default function Header({ now, tasks, nextServiceDate, profileName }: Props) {
   const done = tasks.filter((t) => t.done).length;
   const total = tasks.length;
   const od = overdue(tasks, now).length;
@@ -35,7 +37,7 @@ export default function Header({ now, tasks, nextServiceDate }: Props) {
     <header className="container header">
       <p className="date-line">{fmtDateLine(now)}</p>
       <div className="greeting-row">
-        <h1 className="greeting">{greeting(now.getHours())}</h1>
+        <h1 className="greeting">{greeting(now.getHours(), profileName)}</h1>
         {dday && <span className="next-dday">다음 예배 {dday}</span>}
       </div>
       <p className="status">{status}</p>

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Team } from '../types';
 import { WEEKDAYS_KO } from '../lib/date';
 
@@ -8,6 +8,7 @@ export interface TeamFormValues {
   weekday: number;
   pastorLabel: string;
   songCount: number;
+  members: string[];
 }
 
 interface Props {
@@ -25,6 +26,17 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
   const [weekday, setWeekday] = useState(team?.serviceWeekday ?? 0);
   const [pastorLabel, setPastorLabel] = useState(team?.pastorLabel ?? '목사님');
   const [songCount, setSongCount] = useState(team?.songCount ?? 4);
+  const [members, setMembers] = useState<string[]>(team?.members ?? []);
+  const [memberInput, setMemberInput] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const addMember = () => {
+    const name = memberInput.trim();
+    if (!name) return;
+    setMembers((m) => [...m, name]);
+    setMemberInput('');
+  };
+  const removeMember = (i: number) => setMembers((m) => m.filter((_, idx) => idx !== i));
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -32,9 +44,11 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
+    const focusTimer = window.setTimeout(() => nameInputRef.current?.focus(), 200);
     return () => {
       document.body.classList.remove('lock');
       window.removeEventListener('keydown', onKey);
+      window.clearTimeout(focusTimer);
     };
   }, [onClose]);
 
@@ -47,6 +61,7 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
       weekday,
       pastorLabel: pastorLabel.trim() || '목사님',
       songCount: Math.max(1, songCount),
+      members,
     });
   };
 
@@ -67,12 +82,12 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
         <form onSubmit={submit}>
           <p className="field-label">카테고리 이름</p>
           <input
+            ref={nameInputRef}
             className="text-input full"
             value={shortName}
             onChange={(e) => setShortName(e.target.value)}
             placeholder="예) 대학부, 새벽예배, 유아부"
             aria-label="카테고리 이름"
-            autoFocus
           />
           <p className="field-label">예배 이름</p>
           <input
@@ -124,6 +139,42 @@ export default function TeamForm({ team, onSave, onDelete, onClose }: Props) {
               ＋
             </button>
           </div>
+
+          {editing && (
+            <>
+              <p className="field-label">팀원 명단</p>
+              <div className="member-add-row">
+                <input
+                  className="text-input full"
+                  value={memberInput}
+                  onChange={(e) => setMemberInput(e.target.value)}
+                  placeholder="이름 입력 후 추가"
+                  aria-label="팀원 이름"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addMember();
+                    }
+                  }}
+                />
+                <button type="button" className="member-add-btn" onClick={addMember}>
+                  추가
+                </button>
+              </div>
+              {members.length > 0 && (
+                <ul className="member-list">
+                  {members.map((m, i) => (
+                    <li key={`${m}-${i}`} className="member-chip">
+                      {m}
+                      <button type="button" aria-label={`${m} 삭제`} onClick={() => removeMember(i)}>
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
 
           {!editing && <p className="add-team-hint">추가하면 이번 주·다음 주 준비팩이 자동으로 채워져요.</p>}
 

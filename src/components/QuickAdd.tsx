@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Team, TeamId } from '../types';
 import { toDateInput } from '../lib/date';
 
@@ -13,6 +13,7 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
   const [title, setTitle] = useState('');
   const [teamId, setTeamId] = useState<TeamId>(defaultTeam);
   const [date, setDate] = useState(toDateInput(new Date()));
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -20,9 +21,13 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
+    // 시트 등장 애니메이션이 끝난 뒤 포커스 — autoFocus를 쓰면 애니메이션과
+    // 키보드 팝업이 겹쳐 iOS에서 화면이 과도하게 확대되고 스크롤이 꼬인다.
+    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 200);
     return () => {
       document.body.classList.remove('lock');
       window.removeEventListener('keydown', onKey);
+      window.clearTimeout(focusTimer);
     };
   }, [onClose]);
 
@@ -49,12 +54,12 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
         <form onSubmit={submit}>
           <p className="field-label">무엇을 기억해둘까요?</p>
           <input
+            ref={inputRef}
             className="text-input full"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="예) 은우 시험기간, 라인업 조정"
+            placeholder="예) 콘티 선정, 팀 공지 보내기"
             aria-label="할 일 내용"
-            autoFocus
           />
           <p className="field-label">소속 팀</p>
           <div className="team-select">

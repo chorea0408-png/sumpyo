@@ -16,6 +16,13 @@ export interface Team {
   color: TeamColor;
   /** 사용자가 추가한 팀 */
   custom?: boolean;
+  /** 팀원 이름 목록 */
+  members?: string[];
+}
+
+export interface Profile {
+  name: string;
+  church: string;
 }
 
 export interface TaskLink {
