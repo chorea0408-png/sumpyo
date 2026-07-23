@@ -689,6 +689,30 @@ a {
   margin-top: 3px;
 }
 
+.sheet-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.week-nav-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  font-size: 15px;
+  font-weight: 700;
+  flex: none;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.week-nav-btn:hover {
+  background: var(--sage);
+  color: #fff;
+}
+
 .icon-btn {
   width: 44px;
   height: 44px;
@@ -776,6 +800,47 @@ a {
   background: var(--sage);
   border-color: var(--sage);
   color: #fff;
+  animation: check-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.finish-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--sage-soft);
+  border-radius: 14px;
+  animation: finish-in 0.3s ease;
+}
+
+.finish-icon {
+  font-size: 22px;
+}
+
+.finish-text {
+  font-weight: 700;
+  color: var(--sage-deep);
+  font-size: 14.5px;
+}
+
+@keyframes finish-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 .check-body {

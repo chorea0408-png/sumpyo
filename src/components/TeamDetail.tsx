@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Task, Team, TeamId } from '../types';
-import { ddayLabel, dueInfo, fmtDateLine, startOfWeek, toDateInput } from '../lib/date';
+import { addDays, ddayLabel, dueInfo, fmtDateLine, startOfWeek, toDateInput } from '../lib/date';
 import { ProgressBar } from './ui';
 
 interface Props {
@@ -32,6 +32,11 @@ export default function TeamDetail({
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(toDateInput(now));
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewDate, setViewDate] = useState(() => new Date(focusService));
+
+  useEffect(() => {
+    setViewDate(new Date(focusService));
+  }, [focusService]);
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -45,7 +50,7 @@ export default function TeamDetail({
     };
   }, [onClose]);
 
-  const serviceDate = new Date(focusService);
+  const serviceDate = viewDate;
   const focusWeek = startOfWeek(serviceDate).getTime();
   const inFocus = tasks.filter(
     (t) => startOfWeek(new Date(t.service ?? t.due)).getTime() === focusWeek,
@@ -54,6 +59,7 @@ export default function TeamDetail({
     .slice()
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.order - b.order));
   const done = inFocus.filter((t) => t.done).length;
+  const allDone = inFocus.length > 0 && done === inFocus.length;
   const dday = ddayLabel(serviceDate, now);
 
   const submit = (e: FormEvent) => {
@@ -74,10 +80,26 @@ export default function TeamDetail({
         <header className="sheet-head">
           <div>
             <h3>{team.name}</h3>
-            <p className="sheet-sub">
-              {team.serviceName} · {fmtDateLine(serviceDate)}
-              <span className={`dday${dday === '오늘' ? ' now' : ''}`}>{dday}</span>
-            </p>
+            <div className="sheet-week-nav">
+              <button
+                className="week-nav-btn"
+                aria-label="이전 주"
+                onClick={() => setViewDate((d) => addDays(d, -7))}
+              >
+                ‹
+              </button>
+              <p className="sheet-sub">
+                {team.serviceName} · {fmtDateLine(serviceDate)}
+                <span className={`dday${dday === '오늘' ? ' now' : ''}`}>{dday}</span>
+              </p>
+              <button
+                className="week-nav-btn"
+                aria-label="다음 주"
+                onClick={() => setViewDate((d) => addDays(d, 7))}
+              >
+                ›
+              </button>
+            </div>
           </div>
           <button className="icon-btn" aria-label="닫기" onClick={onClose}>
             ✕
@@ -87,7 +109,7 @@ export default function TeamDetail({
         {inFocus.length === 0 ? (
           <div className="pack-empty">
             <p className="pack-empty-msg">아직 이 예배의 준비 목록이 없어요.</p>
-            <button className="btn btn-primary" onClick={() => onAddPack(team.id, focusService)}>
+            <button className="btn btn-primary" onClick={() => onAddPack(team.id, viewDate.toISOString())}>
               주간 준비팩 불러오기
             </button>
             <p className="hint">묵상부터 마침 기록까지 12단계가 한 번에 추가돼요</p>
@@ -100,6 +122,15 @@ export default function TeamDetail({
               </span>
               <ProgressBar value={inFocus.length ? done / inFocus.length : 0} color={team.color} />
             </div>
+
+            {allDone && (
+              <div className="finish-card">
+                <span className="finish-icon" aria-hidden>
+                  🌿
+                </span>
+                <p className="finish-text">이번 예배 준비를 마쳤어요</p>
+              </div>
+            )}
 
             <ul className="checklist">
               {sorted.map((t) => {
