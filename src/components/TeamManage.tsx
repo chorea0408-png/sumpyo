@@ -53,6 +53,7 @@ export default function TeamManage({
 
   const slots = teamLineupSlots(team.lineupSlots);
   const slotsKey = slots.map((s) => `${s.role}:${s.count}`).join(',');
+  const members = team.members ?? [];
 
   const changeSlotCount = (role: LineupRole, count: number) => {
     const next: LineupSlot[] = LINEUP_ROLES.map((r) => ({
@@ -74,141 +75,159 @@ export default function TeamManage({
         <h1 className="tm-title">{team.shortName} 관리</h1>
       </header>
 
-      <p className="mypage-section-label">기본정보</p>
-      <section className="card mypage-section tm-basic">
-        <label className="profile-field">
-          <span className="field-label">카테고리 이름</span>
-          <input
-            className="text-input full"
-            value={shortName}
-            onChange={(e) => {
-              setShortName(e.target.value);
-              save({ shortName: e.target.value });
-            }}
-            aria-label="카테고리 이름"
-          />
-        </label>
-        <label className="profile-field">
-          <span className="field-label">예배 이름</span>
-          <input
-            className="text-input full"
-            value={serviceName}
-            onChange={(e) => {
-              setServiceName(e.target.value);
-              save({ serviceName: e.target.value });
-            }}
-            aria-label="예배 이름"
-          />
-        </label>
-        <div className="profile-field">
-          <span className="field-label">예배 요일</span>
-          <div className="team-select">
-            {WEEKDAYS_KO.map((w, i) => (
+      <details className="tm-section" open>
+        <summary className="tm-section-label">
+          기본정보
+        </summary>
+        <section className="card mypage-section tm-basic">
+          <label className="profile-field">
+            <span className="field-label">카테고리 이름</span>
+            <input
+              className="text-input full"
+              value={shortName}
+              onChange={(e) => {
+                setShortName(e.target.value);
+                save({ shortName: e.target.value });
+              }}
+              aria-label="카테고리 이름"
+            />
+          </label>
+          <label className="profile-field">
+            <span className="field-label">예배 이름</span>
+            <input
+              className="text-input full"
+              value={serviceName}
+              onChange={(e) => {
+                setServiceName(e.target.value);
+                save({ serviceName: e.target.value });
+              }}
+              aria-label="예배 이름"
+            />
+          </label>
+          <div className="profile-field">
+            <span className="field-label">예배 요일</span>
+            <div className="team-select">
+              {WEEKDAYS_KO.map((w, i) => (
+                <button
+                  key={w}
+                  type="button"
+                  className={`filter-chip${weekday === i ? ' active' : ''}`}
+                  aria-pressed={weekday === i}
+                  onClick={() => {
+                    setWeekday(i);
+                    save({ weekday: i });
+                  }}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="profile-field">
+            <span className="field-label">교역자 호칭</span>
+            <input
+              className="text-input full"
+              value={pastorLabel}
+              onChange={(e) => {
+                setPastorLabel(e.target.value);
+                save({ pastorLabel: e.target.value });
+              }}
+              aria-label="교역자 호칭"
+            />
+          </label>
+          <div className="profile-field">
+            <span className="field-label">콘티 곡 수</span>
+            <div className="song-count-row">
               <button
-                key={w}
                 type="button"
-                className={`filter-chip${weekday === i ? ' active' : ''}`}
-                aria-pressed={weekday === i}
+                className="count-btn"
+                aria-label="곡 수 줄이기"
                 onClick={() => {
-                  setWeekday(i);
-                  save({ weekday: i });
+                  const v = Math.max(1, songCount - 1);
+                  setSongCount(v);
+                  save({ songCount: v });
                 }}
               >
-                {w}
+                −
               </button>
-            ))}
+              <span className="count-value">{songCount}곡</span>
+              <button
+                type="button"
+                className="count-btn"
+                aria-label="곡 수 늘리기"
+                onClick={() => {
+                  const v = Math.min(10, songCount + 1);
+                  setSongCount(v);
+                  save({ songCount: v });
+                }}
+              >
+                ＋
+              </button>
+            </div>
           </div>
-        </div>
-        <label className="profile-field">
-          <span className="field-label">교역자 호칭</span>
-          <input
-            className="text-input full"
-            value={pastorLabel}
-            onChange={(e) => {
-              setPastorLabel(e.target.value);
-              save({ pastorLabel: e.target.value });
-            }}
-            aria-label="교역자 호칭"
-          />
-        </label>
-        <div className="profile-field">
-          <span className="field-label">콘티 곡 수</span>
-          <div className="song-count-row">
-            <button
-              type="button"
-              className="count-btn"
-              aria-label="곡 수 줄이기"
-              onClick={() => {
-                const v = Math.max(1, songCount - 1);
-                setSongCount(v);
-                save({ songCount: v });
-              }}
-            >
-              −
-            </button>
-            <span className="count-value">{songCount}곡</span>
-            <button
-              type="button"
-              className="count-btn"
-              aria-label="곡 수 늘리기"
-              onClick={() => {
-                const v = Math.min(10, songCount + 1);
-                setSongCount(v);
-                save({ songCount: v });
-              }}
-            >
-              ＋
-            </button>
-          </div>
-        </div>
-      </section>
+        </section>
+      </details>
 
-      <p className="mypage-section-label">팀원 & 역할</p>
-      <section className="card mypage-section tm-members">
-        <TeamMembersEditor members={team.members ?? []} onChange={onUpdateMembers} />
-      </section>
+      <details className="tm-section">
+        <summary className="tm-section-label">
+          팀원 & 역할
+          <span className="tm-section-hint">{members.length}명</span>
+        </summary>
+        <section className="card mypage-section tm-members">
+          <TeamMembersEditor members={members} onChange={onUpdateMembers} />
+        </section>
+      </details>
 
-      <p className="mypage-section-label">라인업</p>
-      <section className="card mypage-section tm-lineup">
-        <details className="lineup-slots-config">
-          <summary>필요 인원 구성 수정</summary>
-          <div className="slots-grid">
-            {LINEUP_ROLES.map((r) => {
-              const count = slots.find((s) => s.role === r.id)?.count ?? 0;
-              return (
-                <div key={r.id} className="slot-count-row">
-                  <span className="lineup-role-label">{r.label}</span>
-                  <div className="song-count-row">
-                    <button
-                      type="button"
-                      className="count-btn"
-                      aria-label={`${r.label} 인원 줄이기`}
-                      onClick={() => changeSlotCount(r.id, Math.max(0, count - 1))}
-                    >
-                      −
-                    </button>
-                    <span className="count-value">{count}</span>
-                    <button
-                      type="button"
-                      className="count-btn"
-                      aria-label={`${r.label} 인원 늘리기`}
-                      onClick={() => changeSlotCount(r.id, Math.min(8, count + 1))}
-                    >
-                      ＋
-                    </button>
+      <details className="tm-section">
+        <summary className="tm-section-label">
+          라인업
+        </summary>
+        <section className="card mypage-section tm-lineup">
+          <details className="lineup-slots-config">
+            <summary>필요 인원 구성 수정</summary>
+            <div className="slots-grid">
+              {LINEUP_ROLES.map((r) => {
+                const count = slots.find((s) => s.role === r.id)?.count ?? 0;
+                return (
+                  <div key={r.id} className="slot-count-row">
+                    <span className="lineup-role-label">{r.label}</span>
+                    <div className="song-count-row">
+                      <button
+                        type="button"
+                        className="count-btn"
+                        aria-label={`${r.label} 인원 줄이기`}
+                        onClick={() => changeSlotCount(r.id, Math.max(0, count - 1))}
+                      >
+                        −
+                      </button>
+                      <span className="count-value">{count}</span>
+                      <button
+                        type="button"
+                        className="count-btn"
+                        aria-label={`${r.label} 인원 늘리기`}
+                        onClick={() => changeSlotCount(r.id, Math.min(8, count + 1))}
+                      >
+                        ＋
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </details>
-        <LineupEditor key={slotsKey} team={team} now={now} history={history} onConfirm={onConfirmLineup} />
-      </section>
+                );
+              })}
+            </div>
+          </details>
+          <LineupEditor key={slotsKey} team={team} now={now} history={history} onConfirm={onConfirmLineup} />
+        </section>
+      </details>
 
-      <p className="mypage-section-label">준비팩 구성</p>
-      <section className="card mypage-section tm-template">
-        <TemplateEditor steps={template} isCustom={isCustomTemplate} onChange={onUpdateTemplate} />
-      </section>
+      <details className="tm-section">
+        <summary className="tm-section-label">
+          준비팩 구성
+          <span className="tm-section-hint">{template.length}단계{isCustomTemplate ? ' · 수정됨' : ''}</span>
+        </summary>
+        <section className="card mypage-section tm-template">
+          <TemplateEditor steps={template} isCustom={isCustomTemplate} onChange={onUpdateTemplate} />
+        </section>
+      </details>
 
       <button type="button" className="mypage-row mypage-danger tm-delete card" onClick={onDelete}>
         <span>이 팀 삭제하기</span>

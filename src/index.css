@@ -2000,10 +2000,51 @@ a {
   letter-spacing: -0.02em;
 }
 
+.tm-section {
+  margin-top: 18px;
+}
+
+.tm-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  letter-spacing: 0.04em;
+  padding: 4px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.tm-section-label::-webkit-details-marker {
+  display: none;
+}
+
+.tm-section-label::before {
+  content: '▸';
+  font-size: 11px;
+  color: var(--ink-3);
+  transition: transform 0.15s ease;
+}
+
+.tm-section[open] > .tm-section-label::before {
+  transform: rotate(90deg);
+}
+
+.tm-section-hint {
+  margin-left: auto;
+  color: var(--ink-3);
+  font-weight: 600;
+  letter-spacing: normal;
+  font-size: 12.5px;
+}
+
 .tm-basic,
 .tm-members,
 .tm-lineup,
 .tm-template {
+  margin-top: 8px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -2175,10 +2216,18 @@ a {
 .template-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.template-row {
+.template-card {
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--line);
+}
+
+.template-card:last-child {
+  border-bottom: 0;
+}
+
+.template-card-top {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2212,13 +2261,6 @@ a {
   min-width: 0;
 }
 
-.template-timing {
-  flex: none;
-  font-size: 12px;
-  color: var(--ink-3);
-  white-space: nowrap;
-}
-
 .tmpl-remove {
   flex: none;
   width: 26px;
@@ -2236,14 +2278,73 @@ a {
   color: var(--coral-deep);
 }
 
-.template-add-row {
+.template-card-timing {
   display: flex;
+  align-items: center;
   gap: 8px;
+  margin-top: 8px;
+  padding-left: 30px;
   flex-wrap: wrap;
 }
 
-.template-num {
-  flex: 1 1 64px;
-  min-width: 0;
+.tmpl-timing-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.mini-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.mini-stepper button {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-stepper span {
+  font-size: 12.5px;
+  font-weight: 700;
+  min-width: 44px;
   text-align: center;
+}
+
+.template-add-card {
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-add-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tmpl-add-toggle {
+  margin-top: 12px;
+  min-height: 48px;
+  width: 100%;
+  text-align: left;
+  color: var(--sage-deep);
+  font-weight: 650;
+  font-size: 14.5px;
 }
