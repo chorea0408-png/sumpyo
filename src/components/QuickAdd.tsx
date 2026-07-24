@@ -5,7 +5,7 @@ import { toDateInput } from '../lib/date';
 interface Props {
   teams: Team[];
   defaultTeam: TeamId;
-  onAdd: (title: string, teamId: TeamId, dateStr: string) => void;
+  onAdd: (title: string, teamId: TeamId, dateStr: string, memberId?: string) => void;
   onClose: () => void;
 }
 
@@ -13,7 +13,9 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
   const [title, setTitle] = useState('');
   const [teamId, setTeamId] = useState<TeamId>(defaultTeam);
   const [date, setDate] = useState(toDateInput(new Date()));
+  const [memberId, setMemberId] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const members = teams.find((t) => t.id === teamId)?.members ?? [];
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -34,7 +36,7 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(title.trim(), teamId, date);
+    onAdd(title.trim(), teamId, date, memberId || undefined);
   };
 
   return (
@@ -69,7 +71,10 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
                 type="button"
                 className={`filter-chip${teamId === t.id ? ' active' : ''}`}
                 aria-pressed={teamId === t.id}
-                onClick={() => setTeamId(t.id)}
+                onClick={() => {
+                  setTeamId(t.id);
+                  setMemberId('');
+                }}
               >
                 {t.shortName}
               </button>
@@ -83,6 +88,24 @@ export default function QuickAdd({ teams, defaultTeam, onAdd, onClose }: Props) 
             onChange={(e) => setDate(e.target.value)}
             aria-label="마감일"
           />
+          {members.length > 0 && (
+            <>
+              <p className="field-label">관련 팀원 (선택)</p>
+              <select
+                className="date-input full"
+                value={memberId}
+                onChange={(e) => setMemberId(e.target.value)}
+                aria-label="관련 팀원"
+              >
+                <option value="">선택 안 함</option>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
           <button className="btn btn-primary full submit-gap" type="submit" disabled={!title.trim()}>
             추가하기
           </button>

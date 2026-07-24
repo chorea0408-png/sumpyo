@@ -58,6 +58,7 @@ export function makeWeekTasks(
       doneAt: done ? due : undefined,
       order: i,
       link: step.link,
+      isLineupStep: step.key === 'lineup',
     };
   });
 }

@@ -905,6 +905,11 @@ a {
   margin-left: 6px;
 }
 
+.mini-tag-member {
+  color: var(--sage-deep);
+  background: var(--sage-soft);
+}
+
 .link-chip {
   flex: none;
   font-size: 12.5px;

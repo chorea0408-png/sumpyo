@@ -3,6 +3,9 @@ import type { LineupAssignment, Team } from '../types';
 import { recommendLineup, type LineupPick } from '../lib/lineup';
 import { LINEUP_ROLES, roleLabel, teamLineupSlots } from '../data/roles';
 import { fmtDateShort, nextServiceOn } from '../lib/date';
+import { copyText, noticeText } from '../lib/share';
+
+type CopyState = 'idle' | 'ok' | 'fail';
 
 interface Props {
   team: Team;
@@ -61,6 +64,15 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
 
   const nameOf = (id: string | null) => (id ? (members.find((m) => m.id === id)?.name ?? '(삭제된 팀원)') : '');
 
+  const [copied, setCopied] = useState<CopyState>('idle');
+  const copyNotice = async () => {
+    const ok = await copyText(noticeText(team, service, picks, members));
+    setCopied(ok ? 'ok' : 'fail');
+    setTimeout(() => setCopied('idle'), 2500);
+  };
+  const copyLabel =
+    copied === 'ok' ? '복사했어요 ✓' : copied === 'fail' ? '이 환경에선 복사가 막혀 있어요' : '공지문 복사';
+
   if (members.length === 0) {
     return <p className="lineup-empty">팀원을 먼저 등록하면 라인업을 추천해드려요.</p>;
   }
@@ -88,7 +100,11 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
               </li>
             ))}
           </ul>
-          <button type="button" className="btn btn-primary full submit-gap" onClick={startEdit}>
+          <button type="button" className="btn btn-soft full submit-gap" onClick={copyNotice}>
+            {copyLabel}
+          </button>
+          <p className="hint">카톡에 붙여넣어 팀에 공지할 수 있어요</p>
+          <button type="button" className="btn btn-primary full delete-gap" onClick={startEdit}>
             다시 정하기
           </button>
         </>

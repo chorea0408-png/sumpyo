@@ -31,7 +31,7 @@ import TeamDetail from './components/TeamDetail';
 import WeeklySummary from './components/WeeklySummary';
 import QuickAdd from './components/QuickAdd';
 import TeamForm, { type TeamFormValues } from './components/TeamForm';
-import TeamManage, { type BasicInfo } from './components/TeamManage';
+import TeamManage, { type BasicInfo, type TeamManageSection } from './components/TeamManage';
 import UndoToast from './components/UndoToast';
 import UpdateToast from './components/UpdateToast';
 import Celebration from './components/Celebration';
@@ -53,6 +53,7 @@ export default function App() {
   const [quickOpen, setQuickOpen] = useState(false);
   const [addTeamOpen, setAddTeamOpen] = useState(false);
   const [teamManageId, setTeamManageId] = useState<TeamId | null>(null);
+  const [teamManageFocus, setTeamManageFocus] = useState<TeamManageSection | undefined>(undefined);
   const [now, setNow] = useState(() => new Date());
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const undoTimer = useRef<number | null>(null);
@@ -158,7 +159,7 @@ export default function App() {
     }
   };
 
-  const addTask = (title: string, teamId: TeamId, dateStr: string) => {
+  const addTask = (title: string, teamId: TeamId, dateStr: string, memberId?: string) => {
     const due = new Date(`${dateStr}T23:59:59`);
     setTasks((ts) => [
       ...ts,
@@ -171,6 +172,7 @@ export default function App() {
         done: false,
         order: 1000 + ts.length,
         isCustom: true,
+        memberId,
       },
     ]);
   };
@@ -305,6 +307,13 @@ export default function App() {
   };
   const openService = (teamId: TeamId, iso: string) => setDetail({ teamId, service: iso });
 
+  /** 체크리스트의 '라인업 확정' 항목에서 바로 라인업 관리 화면으로 이동 */
+  const openLineupFor = (teamId: TeamId) => {
+    setDetail(null);
+    setTeamManageFocus('lineup');
+    setTeamManageId(teamId);
+  };
+
   const reset = () => {
     if (window.confirm('데모 데이터를 처음 상태로 되돌릴까요?')) {
       storage.clearData();
@@ -352,7 +361,11 @@ export default function App() {
           team={manageTeam}
           now={now}
           history={lineup}
-          onBack={() => setTeamManageId(null)}
+          focusSection={teamManageFocus}
+          onBack={() => {
+            setTeamManageId(null);
+            setTeamManageFocus(undefined);
+          }}
           onUpdateBasic={(values) => updateTeamBasic(manageTeam.id, values)}
           onUpdateMembers={(members) => updateTeamMembers(manageTeam.id, members)}
           onUpdateLineupSlots={(slots) => updateTeamLineupSlots(manageTeam.id, slots)}
@@ -455,11 +468,15 @@ export default function App() {
           tasks={tasks}
           profile={profile}
           lineup={lineup}
+          now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
           onReset={reset}
           onAddTeam={() => setAddTeamOpen(true)}
-          onManageTeam={(teamId) => setTeamManageId(teamId)}
+          onManageTeam={(teamId) => {
+            setTeamManageFocus(undefined);
+            setTeamManageId(teamId);
+          }}
           onImport={importBackup}
         />
       )}
@@ -490,8 +507,8 @@ export default function App() {
         <QuickAdd
           teams={teams}
           defaultTeam={filter === 'all' ? teams[0].id : filter}
-          onAdd={(title, teamId, dateStr) => {
-            addTask(title, teamId, dateStr);
+          onAdd={(title, teamId, dateStr, memberId) => {
+            addTask(title, teamId, dateStr, memberId);
             setQuickOpen(false);
           }}
           onClose={() => setQuickOpen(false)}
@@ -519,6 +536,7 @@ export default function App() {
           onDelete={removeTask}
           onReschedule={rescheduleTask}
           onAddPack={addPack}
+          onOpenLineup={openLineupFor}
           onClose={() => setDetail(null)}
         />
       )}

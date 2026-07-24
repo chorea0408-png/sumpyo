@@ -10,10 +10,11 @@ interface Props {
   /** 이 상세가 다루는 예배 날짜(ISO) */
   focusService: string;
   onToggle: (id: string) => void;
-  onAdd: (title: string, teamId: TeamId, dateStr: string) => void;
+  onAdd: (title: string, teamId: TeamId, dateStr: string, memberId?: string) => void;
   onDelete: (id: string) => void;
   onReschedule: (id: string, dateStr: string) => void;
   onAddPack: (teamId: string, iso: string) => void;
+  onOpenLineup: (teamId: TeamId) => void;
   onClose: () => void;
 }
 
@@ -27,12 +28,16 @@ export default function TeamDetail({
   onDelete,
   onReschedule,
   onAddPack,
+  onOpenLineup,
   onClose,
 }: Props) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(toDateInput(now));
+  const [memberId, setMemberId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewDate, setViewDate] = useState(() => new Date(focusService));
+  const members = team.members ?? [];
+  const memberName = (id?: string) => (id ? members.find((m) => m.id === id)?.name : undefined);
 
   useEffect(() => {
     setViewDate(new Date(focusService));
@@ -65,8 +70,9 @@ export default function TeamDetail({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(title.trim(), team.id, date);
+    onAdd(title.trim(), team.id, date, memberId || undefined);
     setTitle('');
+    setMemberId('');
   };
 
   return (
@@ -152,6 +158,7 @@ export default function TeamDetail({
                           <span className={`check-title${t.done ? ' is-done' : ''}`}>
                             {t.title}
                             {t.isCustom && <em className="mini-tag">메모</em>}
+                            {memberName(t.memberId) && <em className="mini-tag mini-tag-member">👤 {memberName(t.memberId)}</em>}
                           </span>
                           <span className={`check-sub${!t.done && info.tone === 'overdue' ? ' warn' : ''}`}>
                             {t.done ? '완료' : info.label}
@@ -162,6 +169,11 @@ export default function TeamDetail({
                         <a className="link-chip" href={t.link.url} target="_blank" rel="noreferrer">
                           {t.link.label} ↗
                         </a>
+                      )}
+                      {t.isLineupStep && (
+                        <button type="button" className="link-chip" onClick={() => onOpenLineup(team.id)}>
+                          라인업 정하기 ↗
+                        </button>
                       )}
                       <button
                         className={`kebab${editing ? ' open' : ''}`}
@@ -215,6 +227,21 @@ export default function TeamDetail({
                 onChange={(e) => setDate(e.target.value)}
                 aria-label="마감일"
               />
+              {members.length > 0 && (
+                <select
+                  className="date-input"
+                  value={memberId}
+                  onChange={(e) => setMemberId(e.target.value)}
+                  aria-label="관련 팀원"
+                >
+                  <option value="">관련 팀원 (선택 안 함)</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <button className="btn btn-primary" type="submit" disabled={!title.trim()}>
                 추가
               </button>

@@ -16,10 +16,14 @@ export interface BasicInfo {
   songCount: number;
 }
 
+export type TeamManageSection = 'basic' | 'members' | 'lineup' | 'template';
+
 interface Props {
   team: Team;
   now: Date;
   history: LineupAssignment[];
+  /** 특정 섹션을 펼친 채로 시작하고 싶을 때(예: 체크리스트의 '라인업 확정' 항목에서 진입) — 없으면 기본정보 */
+  focusSection?: TeamManageSection;
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -33,6 +37,7 @@ export default function TeamManage({
   team,
   now,
   history,
+  focusSection,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -41,6 +46,7 @@ export default function TeamManage({
   onUpdateTemplate,
   onDelete,
 }: Props) {
+  const section = focusSection ?? 'basic';
   const [shortName, setShortName] = useState(team.shortName);
   const [serviceName, setServiceName] = useState(team.serviceName);
   const [weekday, setWeekday] = useState(team.serviceWeekday);
@@ -75,7 +81,7 @@ export default function TeamManage({
         <h1 className="tm-title">{team.shortName} 관리</h1>
       </header>
 
-      <details className="tm-section" open>
+      <details className="tm-section" open={section === 'basic'}>
         <summary className="tm-section-label">
           기본정보
         </summary>
@@ -168,7 +174,7 @@ export default function TeamManage({
         </section>
       </details>
 
-      <details className="tm-section">
+      <details className="tm-section" open={section === 'members'}>
         <summary className="tm-section-label">
           팀원 & 역할
           <span className="tm-section-hint">{members.length}명</span>
@@ -178,7 +184,7 @@ export default function TeamManage({
         </section>
       </details>
 
-      <details className="tm-section">
+      <details className="tm-section" open={section === 'lineup'}>
         <summary className="tm-section-label">
           라인업
         </summary>
@@ -219,7 +225,7 @@ export default function TeamManage({
         </section>
       </details>
 
-      <details className="tm-section">
+      <details className="tm-section" open={section === 'template'}>
         <summary className="tm-section-label">
           준비팩 구성
           <span className="tm-section-hint">{template.length}단계{isCustomTemplate ? ' · 수정됨' : ''}</span>

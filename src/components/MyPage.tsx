@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import type { LineupAssignment, Profile, Task, Team, TeamId } from '../types';
 import { exportBackup, parseBackup, readFileAsText } from '../lib/backup';
+import { downloadIcs } from '../lib/ics';
 import { TeamChip } from './ui';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   tasks: Task[];
   profile: Profile;
   lineup: LineupAssignment[];
+  now: Date;
   onSaveProfile: (p: Profile) => void;
   onShowIntro: () => void;
   onReset: () => void;
@@ -23,6 +25,7 @@ export default function MyPage({
   tasks,
   profile,
   lineup,
+  now,
   onSaveProfile,
   onShowIntro,
   onReset,
@@ -108,6 +111,14 @@ export default function MyPage({
           <span>데이터 가져오기 (복원)</span>
           <span className="mypage-arrow">›</span>
         </button>
+        <button
+          className="mypage-row"
+          onClick={() => downloadIcs(teams, now)}
+          disabled={teams.length === 0}
+        >
+          <span>예배 일정 내보내기 (.ics)</span>
+          <span className="mypage-arrow">›</span>
+        </button>
         <input
           ref={fileRef}
           type="file"
@@ -121,6 +132,7 @@ export default function MyPage({
         <p className={`import-msg${importState === 'fail' ? ' fail' : ''}`}>{importMsg}</p>
       )}
       <p className="mypage-hint">이 기기에만 저장돼요. 기기를 바꾸거나 브라우저 데이터를 지우기 전에 내보내기로 백업해두세요.</p>
+      <p className="mypage-hint">.ics는 예배 요일을 아이폰·구글 캘린더에 매주 반복 일정으로 등록해요(정확한 예배 시각은 없어 종일 일정으로 담겨요).</p>
 
       <p className="mypage-section-label">기타</p>
       <section className="card mypage-section">

@@ -18,6 +18,7 @@ function customTask(
   hour: number,
   service: string,
   order: number,
+  memberId?: string,
 ): Task {
   const due = new Date(day);
   due.setHours(hour, 0, 0, 0);
@@ -31,6 +32,7 @@ function customTask(
     done: false,
     order,
     isCustom: true,
+    memberId,
   };
 }
 
@@ -59,11 +61,17 @@ function historyRangeTasks(team: Team, now: Date, skipIso: Set<string>): Task[] 
   return out;
 }
 
+/** 이름으로 팀원 id를 찾는다 — 커스텀 업무의 이름 언급을 실제 TeamMember와 연결하기 위함 */
+function memberIdByName(team: Team | undefined, name: string): string | undefined {
+  return team?.members?.find((m) => m.name === name)?.id;
+}
+
 /**
  * 시연 기준일(7/24 금) 주변으로 실제 달력에 맞춰 배치.
  * 각 팀마다 이번 주 예배(스토리) + 다음 주 예배(준비팩)를 우선 시드로 넣고,
  * 그 위에 6월 첫째 주 ~ 9월 말까지 전체 준비팩 이력을 덧붙인다.
  * 이름: 예소·은우·은성·영광·수현(청소년·청년) / 집사님·권사님(중장년) / 전도사님·목사님(교역자).
+ * 각 커스텀 업무는 언급된 이름의 실제 TeamMember와 memberId로 연결해둔다.
  */
 export function makeSeed(teams: Team[], now: Date = new Date()): Task[] {
   const out: Task[] = [];
@@ -88,28 +96,74 @@ export function makeSeed(teams: Team[], now: Date = new Date()): Task[] {
   if (youth) {
     const svc = thisWeekServiceDate(youth.serviceWeekday, now);
     const svcIso = svc.toISOString();
-    out.push(customTask('c-youth-1', 'youth', '예소 생일 축하 순서 준비', svc, 13, svcIso, 100));
     out.push(
-      customTask('c-youth-2', 'youth', '은우 시험기간 — 라인업 조정', addDays(svc, -1), 20, svcIso, 101),
+      customTask('c-youth-1', 'youth', '예소 생일 축하 순서 준비', svc, 13, svcIso, 100, memberIdByName(youth, '예소')),
     );
-    out.push(customTask('c-youth-3', 'youth', '은성 형제 드럼 셋업 확인', svc, 9, svcIso, 102));
+    out.push(
+      customTask(
+        'c-youth-2',
+        'youth',
+        '은우 시험기간 — 라인업 조정',
+        addDays(svc, -1),
+        20,
+        svcIso,
+        101,
+        memberIdByName(youth, '은우'),
+      ),
+    );
+    out.push(
+      customTask('c-youth-3', 'youth', '은성 형제 드럼 셋업 확인', svc, 9, svcIso, 102, memberIdByName(youth, '은성')),
+    );
   }
   const young = teams.find((t) => t.id === 'young');
   if (young) {
     const svc = thisWeekServiceDate(young.serviceWeekday, now);
     const svcIso = svc.toISOString();
     out.push(
-      customTask('c-young-1', 'young', '영광 형제 간증 순서 조율', addDays(svc, -1), 19, svcIso, 100),
+      customTask(
+        'c-young-1',
+        'young',
+        '영광 형제 간증 순서 조율',
+        addDays(svc, -1),
+        19,
+        svcIso,
+        100,
+        memberIdByName(young, '영광'),
+      ),
     );
-    out.push(customTask('c-young-2', 'young', '수현 자매 새 신자 환영 인사', svc, 12, svcIso, 101));
+    out.push(
+      customTask('c-young-2', 'young', '수현 자매 새 신자 환영 인사', svc, 12, svcIso, 101, memberIdByName(young, '수현')),
+    );
   }
   const senior = teams.find((t) => t.id === 'senior');
   if (senior) {
     // 지난 예배지만 다음 주를 위해 미리 챙길 항목 (다음 주 예배에 귀속)
     const svc = thisWeekServiceDate(senior.serviceWeekday, addDays(now, 7));
     const svcIso = svc.toISOString();
-    out.push(customTask('c-senior-1', 'senior', '박 권사님 특송 반주 조율', addDays(svc, -2), 20, svcIso, 100));
-    out.push(customTask('c-senior-2', 'senior', '김 집사님 헌금기도 순서 확인', addDays(svc, -2), 21, svcIso, 101));
+    out.push(
+      customTask(
+        'c-senior-1',
+        'senior',
+        '박 권사님 특송 반주 조율',
+        addDays(svc, -2),
+        20,
+        svcIso,
+        100,
+        memberIdByName(senior, '박권사님'),
+      ),
+    );
+    out.push(
+      customTask(
+        'c-senior-2',
+        'senior',
+        '김 집사님 헌금기도 순서 확인',
+        addDays(svc, -2),
+        21,
+        svcIso,
+        101,
+        memberIdByName(senior, '김집사님'),
+      ),
+    );
   }
 
   return out;

@@ -95,4 +95,8 @@ export interface Task {
   order: number;
   isCustom?: boolean;
   link?: TaskLink;
+  /** 준비팩의 '라인업 확정' 단계에서 생성된 업무인지 — 체크리스트에서 라인업 관리 화면으로 바로 이동하는 버튼을 보여주는 데 씀 */
+  isLineupStep?: boolean;
+  /** 이 업무와 관련된 팀원 — 지정하면 담당자 이름이 실시간으로 표시됨(팀원 이름이 바뀌어도 따라감) */
+  memberId?: string;
 }
