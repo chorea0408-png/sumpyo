@@ -16,6 +16,7 @@ import * as storage from './lib/storage';
 import { pendingSorted } from './lib/priority';
 import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
+import { useSwUpdate } from './lib/useSwUpdate';
 import Landing from './components/Landing';
 import EmptyHome from './components/EmptyHome';
 import Header from './components/Header';
@@ -32,6 +33,7 @@ import QuickAdd from './components/QuickAdd';
 import TeamForm, { type TeamFormValues } from './components/TeamForm';
 import TeamManage, { type BasicInfo } from './components/TeamManage';
 import UndoToast from './components/UndoToast';
+import UpdateToast from './components/UpdateToast';
 import Celebration from './components/Celebration';
 
 type Filter = TeamId | 'all';
@@ -58,6 +60,7 @@ export default function App() {
   const celebrationTimer = useRef<number | null>(null);
   const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
   const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
+  const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
   useEffect(() => storage.saveTeams(teams), [teams]);
@@ -316,43 +319,49 @@ export default function App() {
 
   if (!entered) {
     return (
-      <Landing
-        hasData={teams.length > 0}
-        onContinue={() => setEntered(true)}
-        onEnterDemo={() => {
-          if (teams.length === 0) {
-            setTeams(INITIAL_TEAMS);
-            setTasks(makeSeed(INITIAL_TEAMS));
-          }
-          setEntered(true);
-        }}
-        onEnterFresh={() => {
-          storage.clearData();
-          setTeams([]);
-          setTasks([]);
-          setLineup([]);
-          setEntered(true);
-          setAddTeamOpen(true);
-        }}
-      />
+      <>
+        <Landing
+          hasData={teams.length > 0}
+          onContinue={() => setEntered(true)}
+          onEnterDemo={() => {
+            if (teams.length === 0) {
+              setTeams(INITIAL_TEAMS);
+              setTasks(makeSeed(INITIAL_TEAMS));
+            }
+            setEntered(true);
+          }}
+          onEnterFresh={() => {
+            storage.clearData();
+            setTeams([]);
+            setTasks([]);
+            setLineup([]);
+            setEntered(true);
+            setAddTeamOpen(true);
+          }}
+        />
+        {needRefresh && <UpdateToast onReload={applyUpdate} />}
+      </>
     );
   }
 
   const manageTeam = teamManageId ? findTeam(teams, teamManageId) : undefined;
   if (manageTeam) {
     return (
-      <TeamManage
-        team={manageTeam}
-        now={now}
-        history={lineup}
-        onBack={() => setTeamManageId(null)}
-        onUpdateBasic={(values) => updateTeamBasic(manageTeam.id, values)}
-        onUpdateMembers={(members) => updateTeamMembers(manageTeam.id, members)}
-        onUpdateLineupSlots={(slots) => updateTeamLineupSlots(manageTeam.id, slots)}
-        onConfirmLineup={(service, picks) => confirmLineup(manageTeam.id, service, picks)}
-        onUpdateTemplate={(tpl) => updateTeamTemplate(manageTeam.id, tpl)}
-        onDelete={() => deleteTeam(manageTeam.id)}
-      />
+      <>
+        <TeamManage
+          team={manageTeam}
+          now={now}
+          history={lineup}
+          onBack={() => setTeamManageId(null)}
+          onUpdateBasic={(values) => updateTeamBasic(manageTeam.id, values)}
+          onUpdateMembers={(members) => updateTeamMembers(manageTeam.id, members)}
+          onUpdateLineupSlots={(slots) => updateTeamLineupSlots(manageTeam.id, slots)}
+          onConfirmLineup={(service, picks) => confirmLineup(manageTeam.id, service, picks)}
+          onUpdateTemplate={(tpl) => updateTeamTemplate(manageTeam.id, tpl)}
+          onDelete={() => deleteTeam(manageTeam.id)}
+        />
+        {needRefresh && <UpdateToast onReload={applyUpdate} />}
+      </>
     );
   }
 
@@ -474,6 +483,8 @@ export default function App() {
       )}
 
       {celebration && <Celebration teamName={celebration} onClose={() => setCelebration(null)} />}
+
+      {needRefresh && <UpdateToast onReload={applyUpdate} />}
 
       {quickOpen && teams.length > 0 && (
         <QuickAdd

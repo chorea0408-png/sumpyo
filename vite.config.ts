@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
+        // 'autoUpdate'는 감지되는 즉시 조용히 새로고침돼 입력 중이던 내용을 날릴 수 있어
+        // 'prompt'로 두고, 실제 새로고침 여부는 useSwUpdate 훅의 토스트 버튼으로 사용자가 결정하게 한다.
+        registerType: 'prompt',
         includeAssets: ['apple-touch-icon.png', 'favicon-48.png'],
         manifest: {
           name: '숨표 — 예배 준비는 보이게',
