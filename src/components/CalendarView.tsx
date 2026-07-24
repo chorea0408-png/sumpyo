@@ -34,7 +34,7 @@ interface Props {
 const WEEKS_AHEAD = 12;
 
 export default function CalendarView({ teams, tasks, now, onOpenService, onAddPack }: Props) {
-  const [mode, setMode] = useState<ViewMode>('list');
+  const [mode, setMode] = useState<ViewMode>('grid');
   const today = startOfDay(now).getTime();
   const rows: Row[] = [];
 
@@ -87,9 +87,12 @@ export default function CalendarView({ teams, tasks, now, onOpenService, onAddPa
       {mode === 'grid' ? (
         <CalendarGrid teams={teams} tasks={tasks} now={now} onOpenService={onOpenService} onAddPack={onAddPack} />
       ) : (
-        groups.map((g) => (
-          <section key={g.key} className="cal-month">
-            <p className="cal-month-label">{g.label}</p>
+        groups.map((g, i) => (
+          <details key={g.key} className="cal-month" open={i === 0}>
+            <summary className="cal-month-label">
+              {g.label}
+              <span className="cal-month-count">{g.rows.length}건</span>
+            </summary>
             <div className="card cal-list">
               {g.rows.map((r) => (
                 <button
@@ -117,7 +120,7 @@ export default function CalendarView({ teams, tasks, now, onOpenService, onAddPa
                 </button>
               ))}
             </div>
-          </section>
+          </details>
         ))
       )}
     </div>

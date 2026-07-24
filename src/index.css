@@ -1520,10 +1520,36 @@ a {
 }
 
 .cal-month-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 700;
   color: var(--sage-deep);
   margin-bottom: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.cal-month-label::-webkit-details-marker {
+  display: none;
+}
+
+.cal-month-label::before {
+  content: '▸';
+  font-size: 11px;
+  color: var(--ink-3);
+  transition: transform 0.15s ease;
+}
+
+.cal-month[open] > .cal-month-label::before {
+  transform: rotate(90deg);
+}
+
+.cal-month-count {
+  color: var(--ink-3);
+  font-weight: 600;
+  font-size: 12.5px;
 }
 
 .cal-list {
