@@ -46,6 +46,7 @@ export default function TemplateEditor({ steps, isCustom, onChange }: Props) {
     onChange(steps.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
   };
   const removeStep = (i: number) => {
+    if (!window.confirm(`"${steps[i].title}" 단계를 삭제할까요?`)) return;
     onChange(steps.filter((_, idx) => idx !== i));
   };
   const moveStep = (i: number, dir: -1 | 1) => {

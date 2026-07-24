@@ -14,7 +14,7 @@ import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
 import { pendingSorted } from './lib/priority';
-import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfWeek, thisWeekServiceDate } from './lib/date';
+import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
 import { useSwUpdate } from './lib/useSwUpdate';
 import Landing from './components/Landing';
@@ -54,6 +54,8 @@ export default function App() {
   const [addTeamOpen, setAddTeamOpen] = useState(false);
   const [teamManageId, setTeamManageId] = useState<TeamId | null>(null);
   const [teamManageFocus, setTeamManageFocus] = useState<TeamManageSection | undefined>(undefined);
+  /** 체크리스트의 '라인업 정하기 ↗'로 진입했을 때, 뒤로가기 시 복귀할 체크리스트 대상 */
+  const [returnToDetail, setReturnToDetail] = useState<DetailTarget | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const undoTimer = useRef<number | null>(null);
@@ -79,6 +81,7 @@ export default function App() {
   // (StrictMode의 effect 이중 실행 등으로) 이 effect가 연달아 두 번 돌아도 중복 생성되지 않는다.
   useEffect(() => {
     if (teams.length === 0) return;
+    const today = startOfDay(now).getTime();
     setTasks((currentTasks) => {
       const missing: { team: Team; service: Date }[] = [];
       for (const team of teams) {
@@ -87,6 +90,8 @@ export default function App() {
           thisWeekServiceDate(team.serviceWeekday, addDays(now, 7)),
         ];
         for (const service of weeks) {
+          // 이번 주 안에서 이미 지난 요일이면(과거 예배) 새로 생성하지 않는다 — 지나버린 유령 준비팩 방지
+          if (startOfDay(service).getTime() < today) continue;
           const svcIso = service.toISOString();
           if (!currentTasks.some((t) => t.teamId === team.id && t.service === svcIso)) {
             missing.push({ team, service });
@@ -309,13 +314,18 @@ export default function App() {
 
   /** 체크리스트의 '라인업 확정' 항목에서 바로 라인업 관리 화면으로 이동 */
   const openLineupFor = (teamId: TeamId) => {
+    setReturnToDetail(detail);
     setDetail(null);
     setTeamManageFocus('lineup');
     setTeamManageId(teamId);
   };
 
   const reset = () => {
-    if (window.confirm('데모 데이터를 처음 상태로 되돌릴까요?')) {
+    const hasRealData = teams.some((t) => t.custom);
+    const message = hasRealData
+      ? '지금 등록된 팀·업무 데이터가 모두 사라지고 데모 데이터로 바뀌어요. 먼저 마이페이지에서 내보내기로 백업해두는 걸 권해요. 그래도 초기화할까요?'
+      : '데모 데이터를 처음 상태로 되돌릴까요?';
+    if (window.confirm(message)) {
       storage.clearData();
       setTeams(INITIAL_TEAMS);
       setTasks(makeSeed(INITIAL_TEAMS));
@@ -362,9 +372,14 @@ export default function App() {
           now={now}
           history={lineup}
           focusSection={teamManageFocus}
+          backLabel={returnToDetail ? '체크리스트로 돌아가기' : '마이페이지로 돌아가기'}
           onBack={() => {
             setTeamManageId(null);
             setTeamManageFocus(undefined);
+            if (returnToDetail) {
+              setDetail(returnToDetail);
+              setReturnToDetail(null);
+            }
           }}
           onUpdateBasic={(values) => updateTeamBasic(manageTeam.id, values)}
           onUpdateMembers={(members) => updateTeamMembers(manageTeam.id, members)}
@@ -475,6 +490,7 @@ export default function App() {
           onAddTeam={() => setAddTeamOpen(true)}
           onManageTeam={(teamId) => {
             setTeamManageFocus(undefined);
+            setReturnToDetail(null);
             setTeamManageId(teamId);
           }}
           onImport={importBackup}

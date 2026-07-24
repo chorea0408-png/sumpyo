@@ -11,6 +11,7 @@ export function useSwUpdate() {
   const updateRef = useRef<((reload?: boolean) => Promise<void>) | null>(null);
 
   useEffect(() => {
+    let intervalId: number | null = null;
     updateRef.current = registerSW({
       immediate: true,
       onNeedRefresh() {
@@ -19,9 +20,12 @@ export function useSwUpdate() {
       onRegisteredSW(_url, registration) {
         // 앱을 오래 켜둔 채로 있어도(홈 화면 PWA 등) 새 배포를 놓치지 않도록 주기적으로 재확인
         if (!registration) return;
-        setInterval(() => registration.update(), 60_000);
+        intervalId = window.setInterval(() => registration.update(), 60_000);
       },
     });
+    return () => {
+      if (intervalId !== null) clearInterval(intervalId);
+    };
   }, []);
 
   const applyUpdate = () => {

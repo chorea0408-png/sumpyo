@@ -24,6 +24,8 @@ interface Props {
   history: LineupAssignment[];
   /** 특정 섹션을 펼친 채로 시작하고 싶을 때(예: 체크리스트의 '라인업 확정' 항목에서 진입) — 없으면 기본정보 */
   focusSection?: TeamManageSection;
+  /** 뒤로가기 버튼의 안내 문구 — 진입 경로에 따라 복귀할 화면이 다르다 */
+  backLabel: string;
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -38,6 +40,7 @@ export default function TeamManage({
   now,
   history,
   focusSection,
+  backLabel,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -75,7 +78,7 @@ export default function TeamManage({
   return (
     <div className="container main teammanage">
       <header className="tm-header">
-        <button className="icon-btn" aria-label="마이페이지로 돌아가기" onClick={onBack}>
+        <button className="icon-btn" aria-label={backLabel} onClick={onBack}>
           ‹
         </button>
         <h1 className="tm-title">{team.shortName} 관리</h1>

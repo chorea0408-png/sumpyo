@@ -20,13 +20,6 @@ export function addDays(d: Date, n: number): Date {
   return x;
 }
 
-export function atTime(base: Date, dayOffset: number, hour: number, minute = 0): string {
-  const x = new Date(base);
-  x.setDate(x.getDate() + dayOffset);
-  x.setHours(hour, minute, 0, 0);
-  return x.toISOString();
-}
-
 export function fmtTime(d: Date): string {
   return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 }

@@ -38,6 +38,7 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
   const picksFromRecommendation = (): LineupPick[] => recommendLineup(team.id, members, slots, history);
 
   const [editing, setEditing] = useState(confirmedRecords.length === 0);
+  const [justConfirmed, setJustConfirmed] = useState(false);
   const [picks, setPicks] = useState<LineupPick[]>(() =>
     confirmedRecords.length > 0 ? picksFromConfirmed() : picksFromRecommendation(),
   );
@@ -60,6 +61,8 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
   const handleConfirm = () => {
     onConfirm(service, picks);
     setEditing(false);
+    setJustConfirmed(true);
+    setTimeout(() => setJustConfirmed(false), 2500);
   };
 
   const nameOf = (id: string | null) => (id ? (members.find((m) => m.id === id)?.name ?? '(삭제된 팀원)') : '');
@@ -85,6 +88,7 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
 
       {!editing ? (
         <>
+          {justConfirmed && <p className="import-msg">라인업을 확정했어요</p>}
           <ul className="lineup-confirmed">
             {picks.map((p) => (
               <li key={p.role} className="lineup-confirmed-row">

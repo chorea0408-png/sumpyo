@@ -28,7 +28,7 @@ export const loadTasks = () => read<Task[] | null>(K_TASKS, null);
 export const saveTasks = (t: Task[]) => write(K_TASKS, t);
 
 /** 옛 버전(팀원=이름 문자열 배열)으로 저장된 데이터를 TeamMember[]로 변환 */
-function migrateMembers(raw: unknown): TeamMember[] | undefined {
+export function migrateMembers(raw: unknown): TeamMember[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   return raw.map((m, i) =>
     typeof m === 'string' ? { id: `legacy-${i}-${m}`, name: m, roles: [] } : (m as TeamMember),
@@ -37,7 +37,7 @@ function migrateMembers(raw: unknown): TeamMember[] | undefined {
 
 export const loadTeams = () => {
   const teams = read<Team[] | null>(K_TEAMS, null);
-  if (!teams) return teams;
+  if (!Array.isArray(teams)) return null;
   return teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
 };
 export const saveTeams = (t: Team[]) => write(K_TEAMS, t);

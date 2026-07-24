@@ -126,7 +126,11 @@ export default function TeamDetail({
               <span>
                 <b>{done}</b>/{inFocus.length} 완료
               </span>
-              <ProgressBar value={inFocus.length ? done / inFocus.length : 0} color={team.color} />
+              <ProgressBar
+                value={inFocus.length ? done / inFocus.length : 0}
+                color={team.color}
+                label={`${team.serviceName} 준비 ${done}/${inFocus.length} 완료`}
+              />
             </div>
 
             {allDone && (
@@ -199,6 +203,7 @@ export default function TeamDetail({
                         <button
                           className="edit-delete"
                           onClick={() => {
+                            if (!window.confirm(`"${t.title}" 업무를 지울까요?`)) return;
                             onDelete(t.id);
                             setEditingId(null);
                           }}

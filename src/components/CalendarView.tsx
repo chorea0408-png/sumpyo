@@ -84,7 +84,11 @@ export default function CalendarView({ teams, tasks, now, onOpenService, onAddPa
         </button>
       </div>
 
-      {mode === 'grid' ? (
+      {teams.length === 0 ? (
+        <div className="pack-empty">
+          <p className="pack-empty-msg">아직 등록된 팀이 없어요. 마이페이지에서 팀을 먼저 추가해주세요.</p>
+        </div>
+      ) : mode === 'grid' ? (
         <CalendarGrid teams={teams} tasks={tasks} now={now} onOpenService={onOpenService} onAddPack={onAddPack} />
       ) : (
         groups.map((g, i) => (
