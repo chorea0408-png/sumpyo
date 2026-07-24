@@ -52,6 +52,8 @@ export interface Team {
 export interface Profile {
   name: string;
   church: string;
+  /** 공지문·주간 현황 텍스트 끝에 붙는 서명 — 없으면 생략 */
+  signature?: string;
 }
 
 export interface TaskLink {

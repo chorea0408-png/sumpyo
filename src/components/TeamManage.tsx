@@ -6,6 +6,7 @@ import { LINEUP_ROLES, teamLineupSlots } from '../data/roles';
 import type { LineupPick } from '../lib/lineup';
 import TeamMembersEditor from './TeamMembersEditor';
 import LineupEditor from './LineupEditor';
+import LineupHistory from './LineupHistory';
 import TemplateEditor from './TemplateEditor';
 
 export interface BasicInfo {
@@ -26,6 +27,8 @@ interface Props {
   focusSection?: TeamManageSection;
   /** 뒤로가기 버튼의 안내 문구 — 진입 경로에 따라 복귀할 화면이 다르다 */
   backLabel: string;
+  /** 공지문에 자동으로 붙는 서명 문구 */
+  signature?: string;
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -41,6 +44,7 @@ export default function TeamManage({
   history,
   focusSection,
   backLabel,
+  signature,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -224,7 +228,15 @@ export default function TeamManage({
               })}
             </div>
           </details>
-          <LineupEditor key={slotsKey} team={team} now={now} history={history} onConfirm={onConfirmLineup} />
+          <LineupEditor
+            key={slotsKey}
+            team={team}
+            now={now}
+            history={history}
+            onConfirm={onConfirmLineup}
+            signature={signature}
+          />
+          <LineupHistory team={team} now={now} history={history} />
         </section>
       </details>
 

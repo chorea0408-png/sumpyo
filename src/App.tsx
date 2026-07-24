@@ -373,6 +373,7 @@ export default function App() {
           history={lineup}
           focusSection={teamManageFocus}
           backLabel={returnToDetail ? '체크리스트로 돌아가기' : '마이페이지로 돌아가기'}
+          signature={profile.signature}
           onBack={() => {
             setTeamManageId(null);
             setTeamManageFocus(undefined);
@@ -440,7 +441,7 @@ export default function App() {
                   />
                   <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
                 </div>
-                <WeeklySummary tasks={tasks} teams={teams} now={now} />
+                <WeeklySummary tasks={tasks} teams={teams} now={now} signature={profile.signature} />
               </div>
 
               <p className="section-label">팀별 준비 현황</p>

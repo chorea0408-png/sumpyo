@@ -9,10 +9,12 @@ export default function WeeklySummary({
   tasks,
   teams,
   now,
+  signature,
 }: {
   tasks: Task[];
   teams: Team[];
   now: Date;
+  signature?: string;
 }) {
   const [copied, setCopied] = useState<CopyState>('idle');
 
@@ -35,7 +37,7 @@ export default function WeeklySummary({
 
   const copy = async () => {
     const weekTasks = tasks.filter(belongsThisWeek);
-    const ok = await copyText(summaryText(weekTasks, teams, now));
+    const ok = await copyText(summaryText(weekTasks, teams, now, signature));
     setCopied(ok ? 'ok' : 'fail');
     setTimeout(() => setCopied('idle'), 2500);
   };

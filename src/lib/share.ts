@@ -5,7 +5,7 @@ import { dueInfo, fmtDateLine, fmtDateShort } from './date';
 import { overdue, pendingSorted } from './priority';
 
 /** 카톡에 붙여넣는 주간 현황 텍스트 — Solo Utility First 전략의 접점 */
-export function summaryText(tasks: Task[], teams: Team[], now: Date): string {
+export function summaryText(tasks: Task[], teams: Team[], now: Date, signature?: string): string {
   const lines = [`🎵 숨표 주간 현황 — ${fmtDateLine(now)}`];
   for (const team of teams) {
     const ts = tasks.filter((t) => t.teamId === team.id);
@@ -22,11 +22,18 @@ export function summaryText(tasks: Task[], teams: Team[], now: Date): string {
     }
     lines.push(line);
   }
+  if (signature && signature.trim()) lines.push('', signature.trim());
   return lines.join('\n');
 }
 
 /** 확정된 라인업을 카톡에 붙여넣는 팀 공지문 텍스트로 변환 */
-export function noticeText(team: Team, service: string, picks: LineupPick[], members: TeamMember[]): string {
+export function noticeText(
+  team: Team,
+  service: string,
+  picks: LineupPick[],
+  members: TeamMember[],
+  signature?: string,
+): string {
   const nameOf = (id: string | null) => (id ? members.find((m) => m.id === id)?.name : undefined);
   const roleLines = picks
     .map((p) => {
@@ -40,6 +47,7 @@ export function noticeText(team: Team, service: string, picks: LineupPick[], mem
     lines.push('🎤 라인업', ...roleLines, '');
   }
   lines.push(`콘티 ${team.songCount}곡 준비 중이에요. 특이사항 있으면 미리 알려주세요 🙏`);
+  if (signature && signature.trim()) lines.push('', signature.trim());
   return lines.join('\n');
 }
 

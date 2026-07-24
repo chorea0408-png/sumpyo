@@ -12,9 +12,10 @@ interface Props {
   now: Date;
   history: LineupAssignment[];
   onConfirm: (service: string, picks: LineupPick[]) => void;
+  signature?: string;
 }
 
-export default function LineupEditor({ team, now, history, onConfirm }: Props) {
+export default function LineupEditor({ team, now, history, onConfirm, signature }: Props) {
   const members = team.members ?? [];
   const slots = teamLineupSlots(team.lineupSlots);
   const service = useMemo(
@@ -69,7 +70,7 @@ export default function LineupEditor({ team, now, history, onConfirm }: Props) {
 
   const [copied, setCopied] = useState<CopyState>('idle');
   const copyNotice = async () => {
-    const ok = await copyText(noticeText(team, service, picks, members));
+    const ok = await copyText(noticeText(team, service, picks, members, signature));
     setCopied(ok ? 'ok' : 'fail');
     setTimeout(() => setCopied('idle'), 2500);
   };
