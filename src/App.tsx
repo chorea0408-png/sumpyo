@@ -3,6 +3,7 @@ import type {
   LineupAssignment,
   LineupSlot,
   Profile,
+  ServiceNote,
   Task,
   TaskWaiting,
   Team,
@@ -69,6 +70,7 @@ export default function App() {
   const celebrationTimer = useRef<number | null>(null);
   const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
   const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
+  const [notes, setNotes] = useState<ServiceNote[]>(() => storage.loadNotes());
   const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
@@ -76,6 +78,7 @@ export default function App() {
   useEffect(() => storage.saveEntered(entered), [entered]);
   useEffect(() => storage.saveProfile(profile), [profile]);
   useEffect(() => storage.saveLineup(lineup), [lineup]);
+  useEffect(() => storage.saveNotes(notes), [notes]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -225,6 +228,17 @@ export default function App() {
   const clearWaiting = (id: string) =>
     setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, waiting: undefined } : t)));
 
+  /** 예배 마침 기록 upsert — 내용을 비우면 기록을 지운다 */
+  const saveNote = (teamId: TeamId, service: string, text: string) => {
+    const at = new Date().toISOString();
+    setNotes((ns) => {
+      const found = ns.find((n) => n.teamId === teamId && n.service === service);
+      if (!text.trim()) return found ? ns.filter((n) => n !== found) : ns;
+      if (found) return ns.map((n) => (n === found ? { ...n, text, updatedAt: at } : n));
+      return [...ns, { id: crypto.randomUUID(), teamId, service, text, createdAt: at, updatedAt: at }];
+    });
+  };
+
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     setTasks((ts) =>
@@ -329,6 +343,7 @@ export default function App() {
     setTeams((ts) => ts.filter((t) => t.id !== teamId));
     setTasks((ts) => ts.filter((t) => t.teamId !== teamId));
     setLineup((ls) => ls.filter((a) => a.teamId !== teamId));
+    setNotes((ns) => ns.filter((n) => n.teamId !== teamId));
     if (filter === teamId) setFilter('all');
     setTeamManageId(null);
   };
@@ -338,11 +353,13 @@ export default function App() {
     importedTasks: Task[],
     importedProfile: Profile | null,
     importedLineup: LineupAssignment[],
+    importedNotes: ServiceNote[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
     if (importedProfile) setProfile(importedProfile);
     setLineup(importedLineup);
+    setNotes(importedNotes);
     setFilter('all');
   };
 
@@ -371,6 +388,7 @@ export default function App() {
       setTeams(INITIAL_TEAMS);
       setTasks(makeSeed(INITIAL_TEAMS));
       setLineup([]);
+      setNotes([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -395,6 +413,7 @@ export default function App() {
             setTeams([]);
             setTasks([]);
             setLineup([]);
+            setNotes([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -415,6 +434,7 @@ export default function App() {
           focusSection={teamManageFocus}
           backLabel={returnToDetail ? '체크리스트로 돌아가기' : '마이페이지로 돌아가기'}
           signature={profile.signature}
+          notes={notes}
           onBack={() => {
             setTeamManageId(null);
             setTeamManageFocus(undefined);
@@ -538,6 +558,7 @@ export default function App() {
           tasks={tasks}
           profile={profile}
           lineup={lineup}
+          notes={notes}
           now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
@@ -614,6 +635,8 @@ export default function App() {
           onReschedule={rescheduleTask}
           onSetWaiting={setWaiting}
           onClearWaiting={clearWaiting}
+          notes={notes}
+          onSaveNote={saveNote}
           onAddPack={addPack}
           onOpenLineup={openLineupFor}
           onClose={() => setDetail(null)}

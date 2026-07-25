@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import type { LineupAssignment, LineupRole, LineupSlot, Team, TeamMember, TemplateStep } from '../types';
+import type {
+  LineupAssignment,
+  LineupRole,
+  LineupSlot,
+  ServiceNote,
+  Team,
+  TeamMember,
+  TemplateStep,
+} from '../types';
 import { WEEKDAYS_KO } from '../lib/date';
 import { WORSHIP_TEMPLATE } from '../data/template';
 import { LINEUP_ROLES, teamLineupSlots } from '../data/roles';
@@ -7,6 +15,7 @@ import type { LineupPick } from '../lib/lineup';
 import TeamMembersEditor from './TeamMembersEditor';
 import LineupEditor from './LineupEditor';
 import LineupHistory from './LineupHistory';
+import ServiceNoteHistory from './ServiceNoteHistory';
 import TemplateEditor from './TemplateEditor';
 
 export interface BasicInfo {
@@ -29,6 +38,7 @@ interface Props {
   backLabel: string;
   /** 공지문에 자동으로 붙는 서명 문구 */
   signature?: string;
+  notes: ServiceNote[];
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -45,6 +55,7 @@ export default function TeamManage({
   focusSection,
   backLabel,
   signature,
+  notes,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -247,6 +258,18 @@ export default function TeamManage({
         </summary>
         <section className="card mypage-section tm-template">
           <TemplateEditor steps={template} isCustom={isCustomTemplate} onChange={onUpdateTemplate} />
+        </section>
+      </details>
+
+      <details className="tm-section">
+        <summary className="tm-section-label">
+          지난 예배 기록
+          <span className="tm-section-hint">
+            {notes.filter((n) => n.teamId === team.id && n.text.trim()).length}개
+          </span>
+        </summary>
+        <section className="card mypage-section">
+          <ServiceNoteHistory notes={notes} teamId={team.id} />
         </section>
       </details>
 

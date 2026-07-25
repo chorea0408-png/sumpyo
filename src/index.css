@@ -1735,6 +1735,39 @@ a {
   border-bottom: 0;
 }
 
+/* ─── 예배 마침 기록 ─── */
+.note-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 14px;
+}
+
+/* 앱의 첫 textarea — .text-input은 한 줄 입력용이라 재사용하지 않는다
+   (flex: 1 1 160px가 세로 컬럼 안에서 높이로 먹고, 기본 폰트가 monospace다) */
+.note-input {
+  width: 100%;
+  flex: none;
+  min-height: 96px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  color: var(--ink);
+}
+
+.note-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+
 /* ─── 기다리는 중 ─── */
 .waiting-board ul {
   display: flex;

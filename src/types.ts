@@ -91,6 +91,21 @@ export interface LineupAssignment {
   confirmedAt: string;
 }
 
+/**
+ * 예배 마침 기록 — 다음 예배에 반영하고 싶은 한 줄.
+ * Task의 필드가 아니라 별도 엔티티인 이유: '예배 마침 기록' 업무는 지울 수 있는데,
+ * 주를 넘겨 남아야 할 유일한 산출물이 업무와 함께 사라지면 안 된다.
+ */
+export interface ServiceNote {
+  id: string;
+  teamId: TeamId;
+  /** Task.service와 같은 ISO 값 */
+  service: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Task {
   id: string;
   teamId: TeamId;

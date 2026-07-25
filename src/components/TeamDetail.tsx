@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { Task, TaskWaiting, Team, TeamId } from '../types';
+import type { ServiceNote, Task, TaskWaiting, Team, TeamId } from '../types';
 import { addDays, ddayLabel, dueInfo, fmtDateLine, toDateInput } from '../lib/date';
 import { serviceTasks } from '../lib/priority';
 import { waitingDays, waitingLabel, waitingWho } from '../lib/waiting';
@@ -17,6 +17,9 @@ interface Props {
   onReschedule: (id: string, dateStr: string) => void;
   onSetWaiting: (id: string, waiting: TaskWaiting) => void;
   onClearWaiting: (id: string) => void;
+  /** 전체 마침 기록 — ‹ ›로 주를 옮기면 그 주의 기록을 보여줘야 해서 배열째 받는다 */
+  notes: ServiceNote[];
+  onSaveNote: (teamId: TeamId, service: string, text: string) => void;
   onAddPack: (teamId: string, iso: string) => void;
   onOpenLineup: (teamId: TeamId) => void;
   onClose: () => void;
@@ -33,6 +36,8 @@ export default function TeamDetail({
   onReschedule,
   onSetWaiting,
   onClearWaiting,
+  notes,
+  onSaveNote,
   onAddPack,
   onOpenLineup,
   onClose,
@@ -43,6 +48,8 @@ export default function TeamDetail({
   const [editingId, setEditingId] = useState<string | null>(null);
   /** 편집 패널에서 '기다리는 중' 입력을 펼친 업무 */
   const [waitingFormId, setWaitingFormId] = useState<string | null>(null);
+  /** 마침 기록 입력을 펼쳤는지 — 기록이 이미 있으면 처음부터 펼친다 */
+  const [noteOpen, setNoteOpen] = useState(false);
   const [waitWho, setWaitWho] = useState('');
   const [waitSince, setWaitSince] = useState(toDateInput(now));
   const [viewDate, setViewDate] = useState(() => new Date(focusService));
@@ -66,8 +73,11 @@ export default function TeamDetail({
   }, [onClose]);
 
   const serviceDate = viewDate;
+  const serviceIso = serviceDate.toISOString();
   // 완료 축하(App.toggle)와 반드시 같은 기준으로 묶는다 — lib/priority.ts의 serviceTasks 참고
-  const inFocus = serviceTasks(tasks, team.id, serviceDate.toISOString());
+  const inFocus = serviceTasks(tasks, team.id, serviceIso);
+  // 지금 보고 있는 주의 기록만 — 이번 주를 열었을 때 지난 주 회고가 뜨지 않는다(의도된 동작)
+  const noteText = notes.find((n) => n.teamId === team.id && n.service === serviceIso)?.text ?? '';
   const sorted = inFocus
     .slice()
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.order - b.order));
@@ -193,6 +203,16 @@ export default function TeamDetail({
                           라인업 정하기 ↗
                         </button>
                       )}
+                      {t.stepKey === 'finish' && (
+                        <button
+                          type="button"
+                          className="link-chip"
+                          onClick={() => setNoteOpen((o) => !o)}
+                          aria-expanded={noteOpen}
+                        >
+                          {noteText.trim() ? '기록 보기' : '기록 남기기'} ↗
+                        </button>
+                      )}
                       <button
                         className={`kebab${editing ? ' open' : ''}`}
                         aria-label={`${t.title} 편집`}
@@ -202,6 +222,22 @@ export default function TeamDetail({
                         ⋯
                       </button>
                     </div>
+
+                    {t.stepKey === 'finish' && noteOpen && (
+                      <div className="note-panel">
+                        <textarea
+                          className="note-input"
+                          value={noteText}
+                          onChange={(e) => onSaveNote(team.id, serviceIso, e.target.value)}
+                          placeholder="다음 예배에 기억하고 싶은 것 한 줄"
+                          aria-label="예배 마침 기록"
+                        />
+                        <p className="hint">
+                          팀 관리 &gt; 지난 예배 기록에서 모아 볼 수 있어요
+                          {/* 다음 주 체크리스트에 자동으로 띄우지 않는다 — 사용자가 '저장하고 찾아보기'를 택했다 */}
+                        </p>
+                      </div>
+                    )}
 
                     {editing && (
                       <div className="edit-panel">
