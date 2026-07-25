@@ -22,6 +22,35 @@ export const WORSHIP_TEMPLATE: TemplateStep[] = [
   { key: 'finish', title: '예배 마침 기록', before: 0, h: 22 },
 ];
 
+/**
+ * 선행 단계 — 이 단계를 하려면 앞의 단계가 먼저 끝나 있어야 자연스럽다.
+ * "앞 순서 전부"가 아니라 실제로 입력이 필요한 관계만 명시한다
+ * (묵상이 안 끝났다고 콘티를 막으면 안 된다).
+ * 기본 12단계 키에만 적용 — 사용자가 추가한 단계·메모는 절대 막지 않는다.
+ */
+export const STEP_PREREQS: Record<string, string[]> = {
+  confirm: ['conti'],
+  score: ['conti'],
+  script: ['conti'],
+  notice: ['conti'],
+  teamNotice: ['conti', 'lineup'],
+  practice: ['score'],
+};
+
+/** 긴 키를 먼저 봐야 'teamNotice'가 'notice'로 잘못 잡히지 않는다 */
+const KNOWN_STEP_KEYS = WORSHIP_TEMPLATE.map((s) => s.key).sort((a, b) => b.length - a.length);
+
+/**
+ * 예전에 저장된 업무의 id 접미사에서 단계 키를 복원한다.
+ * id는 `${idPrefix}-${step.key}` 형태인데 idPrefix 안에도 하이픈이 있어서
+ * 마지막 하이픈으로 자르면 안 되고, 알려진 키로 접미사 매칭해야 한다.
+ * 못 찾으면 undefined — 메모나 사용자가 만든 커스텀 단계다.
+ */
+export function inferStepKey(id: string, isCustom?: boolean): string | undefined {
+  if (isCustom) return undefined;
+  return KNOWN_STEP_KEYS.find((k) => id.endsWith(`-${k}`));
+}
+
 function stepTitle(step: TemplateStep, team: Team): string {
   if (step.key === 'conti') return `콘티 선정 (${team.songCount}곡)`;
   if (step.key === 'confirm') return `${team.pastorLabel} 콘티 확인`;
@@ -59,6 +88,7 @@ export function makeWeekTasks(
       order: i,
       link: step.link,
       isLineupStep: step.key === 'lineup',
+      stepKey: step.key,
     };
   });
 }

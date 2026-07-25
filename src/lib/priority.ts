@@ -1,4 +1,5 @@
 import type { Task, TeamId } from '../types';
+import { STEP_PREREQS } from '../data/template';
 import { DAY_MS, startOfWeek } from './date';
 
 /**
@@ -10,6 +11,54 @@ export function pendingSorted(tasks: Task[]): Task[] {
     .filter((t) => !t.done)
     .slice()
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.order - b.order));
+}
+
+export interface BlockedInfo {
+  task: Task;
+  /** 이 업무를 뒤로 미룬 선행 단계 */
+  blockedBy: Task;
+}
+
+export interface HomeRanking {
+  /** 지금 바로 손댈 수 있는 일 — 히어로 카드는 여기서만 뽑는다 */
+  ready: Task[];
+  /** 선행 단계가 남아 순서를 뒤로 미룬 일. 숨기지 않고 이유만 붙여 보여준다 */
+  blocked: BlockedInfo[];
+}
+
+/**
+ * 홈 전용 랭킹. 마감만 보고 줄을 세우면 "콘티도 안 정했는데 악보 정리부터 하세요"가
+ * 최우선으로 올라올 수 있어서, 같은 팀·같은 예배 안에서 선행 단계가 남은 일은 뒤로 미룬다.
+ *
+ * 숨기지 않고 미루기만 하는 이유: 실제로 순서를 건너뛰어 일하는 경우가 정상적으로 있고,
+ * 목록에서 사라지면 앱이 잃어버린 건지 사용자가 알 수 없다.
+ */
+export function rankForHome(tasks: Task[]): HomeRanking {
+  const sorted = pendingSorted(tasks);
+  const ready: Task[] = [];
+  const blocked: BlockedInfo[] = [];
+
+  for (const task of sorted) {
+    const prereqs = task.stepKey ? STEP_PREREQS[task.stepKey] : undefined;
+    const blocker = prereqs
+      ? sorted.find(
+          (o) =>
+            o.teamId === task.teamId &&
+            (o.service ?? '') === (task.service ?? '') &&
+            !!o.stepKey &&
+            prereqs.includes(o.stepKey),
+        )
+      : undefined;
+    if (blocker) blocked.push({ task, blockedBy: blocker });
+    else ready.push(task);
+  }
+
+  // 남은 일이 전부 blocked면 히어로가 비어 "모두 마쳤어요"라는 거짓말을 하게 된다.
+  // 그럴 땐 미루기를 포기하고 전부 보여준다.
+  if (ready.length === 0 && blocked.length > 0) {
+    return { ready: sorted, blocked: [] };
+  }
+  return { ready, blocked };
 }
 
 /**

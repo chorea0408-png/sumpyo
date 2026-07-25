@@ -13,7 +13,7 @@ import { INITIAL_TEAMS, findTeam, nextColor } from './data/teams';
 import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
-import { carriedOver, pendingSorted, serviceTasks } from './lib/priority';
+import { carriedOver, rankForHome, serviceTasks } from './lib/priority';
 import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
 import { useSwUpdate } from './lib/useSwUpdate';
@@ -121,10 +121,17 @@ export default function App() {
     () => (filter === 'all' ? weekTasks : weekTasks.filter((t) => t.teamId === filter)),
     [weekTasks, filter],
   );
-  const pending = useMemo(() => pendingSorted(filteredWeek), [filteredWeek]);
-  const heroTasks = pending.slice(0, 5);
-  // 잘라내지 않고 나머지 전부를 넘긴다 — 몇 건이 남았는지는 Upcoming이 직접 보여준다
-  const upcoming = pending.slice(5);
+  const ranking = useMemo(() => rankForHome(filteredWeek), [filteredWeek]);
+  const heroTasks = ranking.ready.slice(0, 5);
+  // 잘라내지 않고 나머지 전부를 넘긴다 — 몇 건이 남았는지는 Upcoming이 직접 보여준다.
+  // 선행 단계가 남아 미뤄둔 일도 여기서 이유와 함께 보인다.
+  const upcoming = useMemo(() => {
+    const rest: { task: Task; blockedBy?: Task }[] = ranking.ready
+      .slice(5)
+      .map((task) => ({ task }))
+      .concat(ranking.blocked.map((b) => ({ task: b.task, blockedBy: b.blockedBy })));
+    return rest.sort((a, b) => (a.task.due < b.task.due ? -1 : a.task.due > b.task.due ? 1 : 0));
+  }, [ranking]);
 
   /** 주 경계를 넘으며 홈에서 사라졌을 지난 주 미완료 업무 */
   const CARRY_WEEKS = 4;
@@ -457,7 +464,7 @@ export default function App() {
                     onComplete={toggle}
                     onOpenTeam={openTeam}
                   />
-                  <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
+                  <Upcoming rows={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
                   <CarriedOver
                     tasks={carried}
                     teams={teams}

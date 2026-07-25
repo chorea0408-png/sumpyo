@@ -1,5 +1,5 @@
 import type { LineupAssignment, Profile, Task, Team } from '../types';
-import { migrateMembers } from './storage';
+import { migrateMembers, migrateStepKeys } from './storage';
 
 const BACKUP_VERSION = 1;
 
@@ -86,9 +86,10 @@ export function parseBackup(raw: string): ImportResult {
   }
   const profile = isProfile(d.profile) ? d.profile : null;
   const lineup = Array.isArray(d.lineup) ? d.lineup.filter(isLineupAssignment) : [];
-  // 옛 버전 백업(팀원=문자열 배열)도 storage.loadTeams와 동일하게 TeamMember[]로 마이그레이션
+  // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
-  return { ok: true, teams, tasks: d.tasks, profile, lineup };
+  const tasks = migrateStepKeys(d.tasks);
+  return { ok: true, teams, tasks, profile, lineup };
 }
 
 export function readFileAsText(file: File): Promise<string> {

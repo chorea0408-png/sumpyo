@@ -1,4 +1,5 @@
 import type { LineupAssignment, Profile, Task, Team, TeamMember } from '../types';
+import { inferStepKey } from '../data/template';
 
 const K_TASKS = 'sumpyo.v1';
 const K_TEAMS = 'sumpyo.teams.v1';
@@ -24,7 +25,16 @@ function write(key: string, value: unknown): void {
   }
 }
 
-export const loadTasks = () => read<Task[] | null>(K_TASKS, null);
+/** stepKey가 없던 시절에 저장된 업무에 단계 키를 복원해준다 (id 접미사 기준) */
+export function migrateStepKeys(tasks: Task[]): Task[] {
+  return tasks.map((t) => (t.stepKey ? t : { ...t, stepKey: inferStepKey(t.id, t.isCustom) }));
+}
+
+export const loadTasks = () => {
+  const tasks = read<Task[] | null>(K_TASKS, null);
+  if (!Array.isArray(tasks)) return null;
+  return migrateStepKeys(tasks);
+};
 export const saveTasks = (t: Task[]) => write(K_TASKS, t);
 
 /** 옛 버전(팀원=이름 문자열 배열)으로 저장된 데이터를 TeamMember[]로 변환 */

@@ -4,9 +4,15 @@ import { findTeam } from '../data/teams';
 import { dueInfo } from '../lib/date';
 import { DueBadge, TeamChip } from './ui';
 
+export interface UpcomingRow {
+  task: Task;
+  /** 선행 단계가 남아 뒤로 미뤄진 경우, 그 선행 업무 */
+  blockedBy?: Task;
+}
+
 interface Props {
   /** 히어로에 뽑히고 남은 전체 — 자르기는 이 컴포넌트가 결정한다 */
-  tasks: Task[];
+  rows: UpcomingRow[];
   teams: Team[];
   now: Date;
   onOpenTeam: (teamId: TeamId) => void;
@@ -16,29 +22,32 @@ interface Props {
 const VISIBLE = 3;
 const MAX = 20;
 
-export default function Upcoming({ tasks, teams, now, onOpenTeam }: Props) {
+export default function Upcoming({ rows, teams, now, onOpenTeam }: Props) {
   const [expanded, setExpanded] = useState(false);
-  if (tasks.length === 0) return null;
+  if (rows.length === 0) return null;
 
-  const shown = expanded ? tasks.slice(0, MAX) : tasks.slice(0, VISIBLE);
-  const rest = tasks.length - shown.length;
+  const shown = expanded ? rows.slice(0, MAX) : rows.slice(0, VISIBLE);
+  const rest = rows.length - shown.length;
 
   return (
     <section className="card upcoming">
       <p className="card-label">
         다가오는 마감
-        <span className="card-label-count">{tasks.length}건</span>
+        <span className="card-label-count">{rows.length}건</span>
       </p>
       <ul>
-        {shown.map((t) => {
-          const team = findTeam(teams, t.teamId);
+        {shown.map(({ task, blockedBy }) => {
+          const team = findTeam(teams, task.teamId);
           if (!team) return null;
           return (
-            <li key={t.id}>
-              <button className="upcoming-row" onClick={() => onOpenTeam(t.teamId)}>
+            <li key={task.id}>
+              <button className="upcoming-row" onClick={() => onOpenTeam(task.teamId)}>
                 <TeamChip team={team} />
-                <span className="row-title">{t.title}</span>
-                <DueBadge info={dueInfo(t.due, now, t.allDay)} />
+                <span className="row-title">
+                  {task.title}
+                  {blockedBy && <em className="mini-tag">{blockedBy.title} 먼저</em>}
+                </span>
+                <DueBadge info={dueInfo(task.due, now, task.allDay)} />
               </button>
             </li>
           );
@@ -49,7 +58,7 @@ export default function Upcoming({ tasks, teams, now, onOpenTeam }: Props) {
           그 외 {rest}건 더 보기 →
         </button>
       )}
-      {expanded && tasks.length > VISIBLE && (
+      {expanded && rows.length > VISIBLE && (
         <button type="button" className="svc-viewall" onClick={() => setExpanded(false)}>
           접기
         </button>

@@ -99,6 +99,8 @@ export interface Task {
   link?: TaskLink;
   /** 준비팩의 '라인업 확정' 단계에서 생성된 업무인지 — 체크리스트에서 라인업 관리 화면으로 바로 이동하는 버튼을 보여주는 데 씀 */
   isLineupStep?: boolean;
+  /** 준비팩 단계 키(WORSHIP_TEMPLATE.key) — 선행 단계 판정·단계별 조회에 쓴다. 사용자가 추가한 메모에는 없다 */
+  stepKey?: string;
   /** 이 업무와 관련된 팀원 — 지정하면 담당자 이름이 실시간으로 표시됨(팀원 이름이 바뀌어도 따라감) */
   memberId?: string;
 }
