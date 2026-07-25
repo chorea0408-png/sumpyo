@@ -34,7 +34,9 @@ export interface HomeRanking {
  * 목록에서 사라지면 앱이 잃어버린 건지 사용자가 알 수 없다.
  */
 export function rankForHome(tasks: Task[]): HomeRanking {
-  const sorted = pendingSorted(tasks);
+  // 남의 답을 기다리는 일은 지금 할 수 있는 일이 아니라 여기서 빠진다.
+  // 대신 WaitingBoard가 항상 보여주기 때문에 사라지는 게 아니다.
+  const sorted = pendingSorted(tasks.filter((t) => !t.waiting));
   const ready: Task[] = [];
   const blocked: BlockedInfo[] = [];
 
@@ -71,7 +73,8 @@ export function carriedOver(tasks: Task[], weekStart: Date, weeksBack = 4): Task
   const from = to - weeksBack * 7 * DAY_MS;
   return tasks
     .filter((t) => {
-      if (t.done) return false;
+      // 기다리는 중인 건 WaitingBoard가 따로 챙기므로 여기서 중복 노출하지 않는다
+      if (t.done || t.waiting) return false;
       const at = new Date(t.service ?? t.due).getTime();
       return at >= from && at < to;
     })
@@ -91,9 +94,13 @@ export function serviceTasks(tasks: Task[], teamId: TeamId, service: string): Ta
   );
 }
 
+/**
+ * 마감이 지난 미완료 업무.
+ * 답을 기다리는 중인 건 사용자 잘못이 아니므로 "확인이 필요해요" 집계에서 뺀다.
+ */
 export function overdue(tasks: Task[], now: Date): Task[] {
   const t = now.getTime();
-  return tasks.filter((x) => !x.done && new Date(x.due).getTime() < t);
+  return tasks.filter((x) => !x.done && !x.waiting && new Date(x.due).getTime() < t);
 }
 
 export function dueToday(tasks: Task[], now: Date): Task[] {
@@ -101,7 +108,7 @@ export function dueToday(tasks: Task[], now: Date): Task[] {
   sod.setHours(0, 0, 0, 0);
   const eod = sod.getTime() + 86_400_000;
   return tasks.filter((x) => {
-    if (x.done) return false;
+    if (x.done || x.waiting) return false;
     const d = new Date(x.due).getTime();
     return d >= now.getTime() && d < eod;
   });

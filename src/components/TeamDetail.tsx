@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { Task, Team, TeamId } from '../types';
+import type { Task, TaskWaiting, Team, TeamId } from '../types';
 import { addDays, ddayLabel, dueInfo, fmtDateLine, toDateInput } from '../lib/date';
 import { serviceTasks } from '../lib/priority';
+import { waitingDays, waitingLabel, waitingWho } from '../lib/waiting';
 import { ProgressBar } from './ui';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
   onAdd: (title: string, teamId: TeamId, dateStr: string, memberId?: string) => void;
   onDelete: (id: string) => void;
   onReschedule: (id: string, dateStr: string) => void;
+  onSetWaiting: (id: string, waiting: TaskWaiting) => void;
+  onClearWaiting: (id: string) => void;
   onAddPack: (teamId: string, iso: string) => void;
   onOpenLineup: (teamId: TeamId) => void;
   onClose: () => void;
@@ -28,6 +31,8 @@ export default function TeamDetail({
   onAdd,
   onDelete,
   onReschedule,
+  onSetWaiting,
+  onClearWaiting,
   onAddPack,
   onOpenLineup,
   onClose,
@@ -36,6 +41,10 @@ export default function TeamDetail({
   const [date, setDate] = useState(toDateInput(now));
   const [memberId, setMemberId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** 편집 패널에서 '기다리는 중' 입력을 펼친 업무 */
+  const [waitingFormId, setWaitingFormId] = useState<string | null>(null);
+  const [waitWho, setWaitWho] = useState('');
+  const [waitSince, setWaitSince] = useState(toDateInput(now));
   const [viewDate, setViewDate] = useState(() => new Date(focusService));
   const members = team.members ?? [];
   const memberName = (id?: string) => (id ? members.find((m) => m.id === id)?.name : undefined);
@@ -163,8 +172,14 @@ export default function TeamDetail({
                             {t.isCustom && <em className="mini-tag">메모</em>}
                             {memberName(t.memberId) && <em className="mini-tag mini-tag-member">👤 {memberName(t.memberId)}</em>}
                           </span>
-                          <span className={`check-sub${!t.done && info.tone === 'overdue' ? ' warn' : ''}`}>
-                            {t.done ? '완료' : info.label}
+                          <span
+                            className={`check-sub${!t.done && !t.waiting && info.tone === 'overdue' ? ' warn' : ''}`}
+                          >
+                            {t.done
+                              ? '완료'
+                              : t.waiting
+                                ? `${waitingWho(t.waiting, members) || '요청'} · ${waitingLabel(waitingDays(t.waiting.since, now))}`
+                                : info.label}
                           </span>
                         </span>
                       </button>
@@ -199,6 +214,92 @@ export default function TeamDetail({
                             onChange={(e) => e.target.value && onReschedule(t.id, e.target.value)}
                           />
                         </label>
+                        {/* 이미 끝낸 일은 누구의 답도 기다리지 않는다 — 컨트롤 자체를 숨긴다 */}
+                        {t.done ? null : t.waiting ? (
+                          <button
+                            type="button"
+                            className="btn btn-soft full"
+                            onClick={() => onClearWaiting(t.id)}
+                          >
+                            답 받았어요
+                          </button>
+                        ) : waitingFormId === t.id ? (
+                          <div className="waiting-form">
+                            <label className="edit-field">
+                              <span>누구에게</span>
+                              {members.length > 0 ? (
+                                <select
+                                  className="date-input"
+                                  value={waitWho}
+                                  onChange={(e) => setWaitWho(e.target.value)}
+                                  aria-label="요청한 대상"
+                                >
+                                  <option value="">직접 입력</option>
+                                  {team.pastorLabel && (
+                                    <option value={`name:${team.pastorLabel}`}>{team.pastorLabel}</option>
+                                  )}
+                                  {members.map((m) => (
+                                    <option key={m.id} value={`id:${m.id}`}>
+                                      {m.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  className="date-input"
+                                  value={waitWho.replace(/^name:/, '')}
+                                  onChange={(e) => setWaitWho(`name:${e.target.value}`)}
+                                  placeholder="예) 목사님"
+                                  aria-label="요청한 대상"
+                                />
+                              )}
+                            </label>
+                            <label className="edit-field">
+                              <span>언제 요청했나요</span>
+                              <input
+                                className="date-input"
+                                type="date"
+                                value={waitSince}
+                                onChange={(e) => setWaitSince(e.target.value)}
+                              />
+                            </label>
+                            <div className="waiting-form-actions">
+                              <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setWaitingFormId(null)}
+                              >
+                                취소
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => {
+                                  const since = new Date(`${waitSince}T00:00:00`).toISOString();
+                                  const w: TaskWaiting = waitWho.startsWith('id:')
+                                    ? { whoMemberId: waitWho.slice(3), since }
+                                    : { whoName: waitWho.replace(/^name:/, '').trim() || undefined, since };
+                                  onSetWaiting(t.id, w);
+                                  setWaitingFormId(null);
+                                }}
+                              >
+                                표시하기
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-soft full"
+                            onClick={() => {
+                              setWaitingFormId(t.id);
+                              setWaitWho(t.stepKey === 'confirm' ? `name:${team.pastorLabel}` : '');
+                              setWaitSince(toDateInput(now));
+                            }}
+                          >
+                            답을 기다리는 중으로 표시
+                          </button>
+                        )}
                         <button
                           className="edit-delete"
                           onClick={() => {

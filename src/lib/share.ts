@@ -11,7 +11,9 @@ export function summaryText(tasks: Task[], teams: Team[], now: Date, signature?:
     const ts = tasks.filter((t) => t.teamId === team.id);
     if (ts.length === 0) continue;
     const done = ts.filter((t) => t.done).length;
-    const next = pendingSorted(ts)[0];
+    // 답을 기다리는 중인 건 '다음에 할 일'이 아니다.
+    // 그리고 누가 며칠째 답이 없는지는 절대 공유 텍스트에 넣지 않는다 — 개인 파악용 정보다.
+    const next = pendingSorted(ts.filter((t) => !t.waiting))[0];
     const od = overdue(ts, now).length;
     let line = `· ${team.shortName} ${team.serviceName} ${done}/${ts.length}`;
     if (!next) {

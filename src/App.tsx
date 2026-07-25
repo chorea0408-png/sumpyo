@@ -4,6 +4,7 @@ import type {
   LineupSlot,
   Profile,
   Task,
+  TaskWaiting,
   Team,
   TeamId,
   TeamMember,
@@ -14,6 +15,7 @@ import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
 import { carriedOver, rankForHome, serviceTasks } from './lib/priority';
+import { waitingTasks } from './lib/waiting';
 import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
 import { useSwUpdate } from './lib/useSwUpdate';
@@ -23,6 +25,7 @@ import Header from './components/Header';
 import PriorityCarousel from './components/PriorityCarousel';
 import Upcoming from './components/Upcoming';
 import CarriedOver from './components/CarriedOver';
+import WaitingBoard from './components/WaitingBoard';
 import UpcomingServices from './components/UpcomingServices';
 import CalendarView from './components/CalendarView';
 import MyPage from './components/MyPage';
@@ -133,6 +136,12 @@ export default function App() {
     return rest.sort((a, b) => (a.task.due < b.task.due ? -1 : a.task.due > b.task.due ? 1 : 0));
   }, [ranking]);
 
+  /** 답을 기다리는 중인 업무 — 주 단위로 자르지 않는다(요청은 주를 넘겨서도 살아 있다) */
+  const waiting = useMemo(() => {
+    const all = waitingTasks(tasks);
+    return filter === 'all' ? all : all.filter((t) => t.teamId === filter);
+  }, [tasks, filter]);
+
   /** 주 경계를 넘으며 홈에서 사라졌을 지난 주 미완료 업무 */
   const CARRY_WEEKS = 4;
   const carried = useMemo(() => {
@@ -208,6 +217,13 @@ export default function App() {
   };
 
   const removeTask = (id: string) => setTasks((ts) => ts.filter((t) => t.id !== id));
+
+  const setWaiting = (id: string, waiting: TaskWaiting) =>
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, waiting } : t)));
+
+  /** 답을 받았다는 표시일 뿐 — 자료를 받은 것과 정리한 것은 다른 행동이라 완료 처리하지 않는다 */
+  const clearWaiting = (id: string) =>
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, waiting: undefined } : t)));
 
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -465,6 +481,13 @@ export default function App() {
                     onOpenTeam={openTeam}
                   />
                   <Upcoming rows={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
+                  <WaitingBoard
+                    tasks={waiting}
+                    teams={teams}
+                    now={now}
+                    onResolve={clearWaiting}
+                    onOpenTeam={openTeam}
+                  />
                   <CarriedOver
                     tasks={carried}
                     teams={teams}
@@ -589,6 +612,8 @@ export default function App() {
           onAdd={addTask}
           onDelete={removeTask}
           onReschedule={rescheduleTask}
+          onSetWaiting={setWaiting}
+          onClearWaiting={clearWaiting}
           onAddPack={addPack}
           onOpenLineup={openLineupFor}
           onClose={() => setDetail(null)}

@@ -61,6 +61,16 @@ export interface TaskLink {
   url: string;
 }
 
+/** 남의 답을 기다리는 중이라는 표시 — 내가 지금 손댈 수 있는 일이 아니라는 뜻 */
+export interface TaskWaiting {
+  /** 팀원에게 요청한 경우 — 이름이 바뀌어도 따라가도록 id로 보관 */
+  whoMemberId?: string;
+  /** 팀 밖 사람(교역자 등) — 자유 입력 */
+  whoName?: string;
+  /** 요청한 날(ISO) — '며칠째'를 세는 기준 */
+  since: string;
+}
+
 export interface TemplateStep {
   key: string;
   title: string;
@@ -101,6 +111,8 @@ export interface Task {
   isLineupStep?: boolean;
   /** 준비팩 단계 키(WORSHIP_TEMPLATE.key) — 선행 단계 판정·단계별 조회에 쓴다. 사용자가 추가한 메모에는 없다 */
   stepKey?: string;
+  /** 외부 응답을 기다리는 중 — 있으면 '지금 할 수 있는 일'에서 빠지고 별도 블록에 모인다 */
+  waiting?: TaskWaiting;
   /** 이 업무와 관련된 팀원 — 지정하면 담당자 이름이 실시간으로 표시됨(팀원 이름이 바뀌어도 따라감) */
   memberId?: string;
 }
