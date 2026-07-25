@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { ServiceNote, Task, TaskWaiting, Team, TeamId } from '../types';
+import type { ServiceNote, SetlistSong, Task, TaskWaiting, Team, TeamId } from '../types';
 import { addDays, ddayLabel, dueInfo, fmtDateLine, toDateInput } from '../lib/date';
 import { serviceTasks } from '../lib/priority';
 import { waitingDays, waitingLabel, waitingWho } from '../lib/waiting';
+import SetlistPanel from './SetlistPanel';
 import { ProgressBar } from './ui';
 
 interface Props {
@@ -20,6 +21,10 @@ interface Props {
   /** 전체 마침 기록 — ‹ ›로 주를 옮기면 그 주의 기록을 보여줘야 해서 배열째 받는다 */
   notes: ServiceNote[];
   onSaveNote: (teamId: TeamId, service: string, text: string) => void;
+  /** 전체 콘티 — 노트와 같은 이유로 배열째 받는다 */
+  setlist: SetlistSong[];
+  onChangeSetlist: (songs: SetlistSong[]) => void;
+  onAddSong: (teamId: TeamId, service: string, title: string) => void;
   onAddPack: (teamId: string, iso: string) => void;
   onOpenLineup: (teamId: TeamId) => void;
   onClose: () => void;
@@ -38,6 +43,9 @@ export default function TeamDetail({
   onClearWaiting,
   notes,
   onSaveNote,
+  setlist,
+  onChangeSetlist,
+  onAddSong,
   onAddPack,
   onOpenLineup,
   onClose,
@@ -50,6 +58,8 @@ export default function TeamDetail({
   const [waitingFormId, setWaitingFormId] = useState<string | null>(null);
   /** 마침 기록 입력을 펼쳤는지 — 기록이 이미 있으면 처음부터 펼친다 */
   const [noteOpen, setNoteOpen] = useState(false);
+  /** 콘티 패널을 펼쳤는지 */
+  const [setlistOpen, setSetlistOpen] = useState(false);
   const [waitWho, setWaitWho] = useState('');
   const [waitSince, setWaitSince] = useState(toDateInput(now));
   const [viewDate, setViewDate] = useState(() => new Date(focusService));
@@ -78,6 +88,11 @@ export default function TeamDetail({
   const inFocus = serviceTasks(tasks, team.id, serviceIso);
   // 지금 보고 있는 주의 기록만 — 이번 주를 열었을 때 지난 주 회고가 뜨지 않는다(의도된 동작)
   const noteText = notes.find((n) => n.teamId === team.id && n.service === serviceIso)?.text ?? '';
+  const songs = setlist
+    .filter((s) => s.teamId === team.id && s.service === serviceIso)
+    .slice()
+    .sort((a, b) => a.order - b.order);
+  const unconfirmed = songs.filter((s) => !s.confirmed).length;
   const sorted = inFocus
     .slice()
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.order - b.order));
@@ -181,6 +196,10 @@ export default function TeamDetail({
                             {t.title}
                             {t.isCustom && <em className="mini-tag">메모</em>}
                             {memberName(t.memberId) && <em className="mini-tag mini-tag-member">👤 {memberName(t.memberId)}</em>}
+                            {/* "악보·키·송폼 확인이 필요한 곡은?" — 콘티가 있을 때만 나오는 파생 표시 */}
+                            {t.stepKey === 'score' && unconfirmed > 0 && (
+                              <em className="mini-tag">{unconfirmed}곡 확인 필요</em>
+                            )}
                           </span>
                           <span
                             className={`check-sub${!t.done && !t.waiting && info.tone === 'overdue' ? ' warn' : ''}`}
@@ -213,6 +232,16 @@ export default function TeamDetail({
                           {noteText.trim() ? '기록 보기' : '기록 남기기'} ↗
                         </button>
                       )}
+                      {t.stepKey === 'conti' && (
+                        <button
+                          type="button"
+                          className="link-chip"
+                          onClick={() => setSetlistOpen((o) => !o)}
+                          aria-expanded={setlistOpen}
+                        >
+                          콘티 정리 {songs.length > 0 ? `(${songs.length}) ` : ''}↗
+                        </button>
+                      )}
                       <button
                         className={`kebab${editing ? ' open' : ''}`}
                         aria-label={`${t.title} 편집`}
@@ -222,6 +251,20 @@ export default function TeamDetail({
                         ⋯
                       </button>
                     </div>
+
+                    {t.stepKey === 'conti' && setlistOpen && (
+                      <SetlistPanel
+                        songs={songs}
+                        songCount={team.songCount}
+                        onChange={(next) =>
+                          onChangeSetlist([
+                            ...setlist.filter((s) => !(s.teamId === team.id && s.service === serviceIso)),
+                            ...next,
+                          ])
+                        }
+                        onAdd={(songTitle) => onAddSong(team.id, serviceIso, songTitle)}
+                      />
+                    )}
 
                     {t.stepKey === 'finish' && noteOpen && (
                       <div className="note-panel">

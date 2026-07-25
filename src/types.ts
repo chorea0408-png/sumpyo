@@ -106,6 +106,23 @@ export interface ServiceNote {
   updatedAt: string;
 }
 
+/**
+ * 한 예배의 콘티에 들어가는 곡. 재사용 라이브러리가 아니라 그 예배의 목록일 뿐이다
+ * — 인도자는 곡을 관리하고 싶은 게 아니라 준비 상태를 알고 싶기 때문.
+ */
+export interface SetlistSong {
+  id: string;
+  teamId: TeamId;
+  /** Task.service와 같은 ISO 값 */
+  service: string;
+  order: number;
+  title: string;
+  /** 키 — 자유 입력(A, Bb, G#m …). 형식을 강제하지 않는다 */
+  key?: string;
+  /** 악보·키·송폼 확인이 끝났는지 */
+  confirmed?: boolean;
+}
+
 export interface Task {
   id: string;
   teamId: TeamId;

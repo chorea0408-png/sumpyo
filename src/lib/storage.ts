@@ -1,4 +1,12 @@
-import type { LineupAssignment, Profile, ServiceNote, Task, Team, TeamMember } from '../types';
+import type {
+  LineupAssignment,
+  Profile,
+  ServiceNote,
+  SetlistSong,
+  Task,
+  Team,
+  TeamMember,
+} from '../types';
 import { inferStepKey } from '../data/template';
 
 const K_TASKS = 'sumpyo.v1';
@@ -7,6 +15,7 @@ const K_ENTERED = 'sumpyo.entered.v1';
 const K_PROFILE = 'sumpyo.profile.v1';
 const K_LINEUP = 'sumpyo.lineup.v1';
 const K_NOTES = 'sumpyo.notes.v1';
+const K_SETLIST = 'sumpyo.setlist.v1';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -65,10 +74,14 @@ export const saveLineup = (l: LineupAssignment[]) => write(K_LINEUP, l);
 export const loadNotes = () => read<ServiceNote[]>(K_NOTES, []);
 export const saveNotes = (n: ServiceNote[]) => write(K_NOTES, n);
 
+export const loadSetlist = () => read<SetlistSong[]>(K_SETLIST, []);
+export const saveSetlist = (s: SetlistSong[]) => write(K_SETLIST, s);
+
 /** 데모 데이터 초기화 — 진입 여부(entered)는 유지 */
 export function clearData(): void {
   localStorage.removeItem(K_TASKS);
   localStorage.removeItem(K_TEAMS);
   localStorage.removeItem(K_LINEUP);
   localStorage.removeItem(K_NOTES);
+  localStorage.removeItem(K_SETLIST);
 }

@@ -4,6 +4,7 @@ import type {
   LineupSlot,
   Profile,
   ServiceNote,
+  SetlistSong,
   Task,
   TaskWaiting,
   Team,
@@ -71,6 +72,7 @@ export default function App() {
   const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
   const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
   const [notes, setNotes] = useState<ServiceNote[]>(() => storage.loadNotes());
+  const [setlist, setSetlist] = useState<SetlistSong[]>(() => storage.loadSetlist());
   const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
@@ -79,6 +81,7 @@ export default function App() {
   useEffect(() => storage.saveProfile(profile), [profile]);
   useEffect(() => storage.saveLineup(lineup), [lineup]);
   useEffect(() => storage.saveNotes(notes), [notes]);
+  useEffect(() => storage.saveSetlist(setlist), [setlist]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -239,6 +242,12 @@ export default function App() {
     });
   };
 
+  const addSong = (teamId: TeamId, service: string, title: string) =>
+    setSetlist((ss) => {
+      const order = ss.filter((s) => s.teamId === teamId && s.service === service).length;
+      return [...ss, { id: crypto.randomUUID(), teamId, service, order, title }];
+    });
+
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     setTasks((ts) =>
@@ -344,6 +353,7 @@ export default function App() {
     setTasks((ts) => ts.filter((t) => t.teamId !== teamId));
     setLineup((ls) => ls.filter((a) => a.teamId !== teamId));
     setNotes((ns) => ns.filter((n) => n.teamId !== teamId));
+    setSetlist((ss) => ss.filter((s) => s.teamId !== teamId));
     if (filter === teamId) setFilter('all');
     setTeamManageId(null);
   };
@@ -354,12 +364,14 @@ export default function App() {
     importedProfile: Profile | null,
     importedLineup: LineupAssignment[],
     importedNotes: ServiceNote[],
+    importedSetlist: SetlistSong[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
     if (importedProfile) setProfile(importedProfile);
     setLineup(importedLineup);
     setNotes(importedNotes);
+    setSetlist(importedSetlist);
     setFilter('all');
   };
 
@@ -389,6 +401,7 @@ export default function App() {
       setTasks(makeSeed(INITIAL_TEAMS));
       setLineup([]);
       setNotes([]);
+      setSetlist([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -414,6 +427,7 @@ export default function App() {
             setTasks([]);
             setLineup([]);
             setNotes([]);
+            setSetlist([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -559,6 +573,7 @@ export default function App() {
           profile={profile}
           lineup={lineup}
           notes={notes}
+          setlist={setlist}
           now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
@@ -637,6 +652,9 @@ export default function App() {
           onClearWaiting={clearWaiting}
           notes={notes}
           onSaveNote={saveNote}
+          setlist={setlist}
+          onChangeSetlist={setSetlist}
+          onAddSong={addSong}
           onAddPack={addPack}
           onOpenLineup={openLineupFor}
           onClose={() => setDetail(null)}

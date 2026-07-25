@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import type { LineupAssignment, Profile, ServiceNote, Task, Team, TeamId } from '../types';
+import type { LineupAssignment, Profile, ServiceNote, SetlistSong, Task, Team, TeamId } from '../types';
 import { exportBackup, parseBackup, readFileAsText } from '../lib/backup';
 import { downloadIcs } from '../lib/ics';
 import { TeamChip } from './ui';
@@ -17,12 +17,14 @@ interface Props {
   onAddTeam: () => void;
   onManageTeam: (teamId: TeamId) => void;
   notes: ServiceNote[];
+  setlist: SetlistSong[];
   onImport: (
     teams: Team[],
     tasks: Task[],
     profile: Profile | null,
     lineup: LineupAssignment[],
     notes: ServiceNote[],
+    setlist: SetlistSong[],
   ) => void;
 }
 
@@ -34,6 +36,7 @@ export default function MyPage({
   profile,
   lineup,
   notes,
+  setlist,
   now,
   onSaveProfile,
   onShowIntro,
@@ -68,7 +71,7 @@ export default function MyPage({
       return;
     }
     if (window.confirm(`백업 파일에는 팀 ${result.teams.length}개, 업무 ${result.tasks.length}건이 있어요. 지금 데이터를 덮어쓸까요?`)) {
-      onImport(result.teams, result.tasks, result.profile, result.lineup, result.notes);
+      onImport(result.teams, result.tasks, result.profile, result.lineup, result.notes, result.setlist);
       setImportState('ok');
       setImportMsg('불러오기 완료');
     }
@@ -137,7 +140,7 @@ export default function MyPage({
         <button
           className="mypage-row"
           onClick={() => {
-            exportBackup(teams, tasks, profile, lineup, notes);
+            exportBackup(teams, tasks, profile, lineup, notes, setlist);
             notifyExport('백업 파일을 내려받았어요');
           }}
         >

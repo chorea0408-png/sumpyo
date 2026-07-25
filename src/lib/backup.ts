@@ -1,4 +1,4 @@
-import type { LineupAssignment, Profile, ServiceNote, Task, Team } from '../types';
+import type { LineupAssignment, Profile, ServiceNote, SetlistSong, Task, Team } from '../types';
 import { migrateMembers, migrateStepKeys } from './storage';
 
 const BACKUP_VERSION = 1;
@@ -12,6 +12,7 @@ interface BackupFile {
   profile?: Profile;
   lineup?: LineupAssignment[];
   notes?: ServiceNote[];
+  setlist?: SetlistSong[];
 }
 
 function fmtStamp(d: Date): string {
@@ -25,6 +26,7 @@ export function exportBackup(
   profile?: Profile,
   lineup?: LineupAssignment[],
   notes?: ServiceNote[],
+  setlist?: SetlistSong[],
 ): void {
   const payload: BackupFile = {
     app: 'sumpyo',
@@ -35,6 +37,7 @@ export function exportBackup(
     profile,
     lineup,
     notes,
+    setlist,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -55,6 +58,7 @@ export type ImportResult =
       profile: Profile | null;
       lineup: LineupAssignment[];
       notes: ServiceNote[];
+      setlist: SetlistSong[];
     }
   | { ok: false; error: string };
 
@@ -80,6 +84,12 @@ function isServiceNote(x: unknown): x is ServiceNote {
   if (!x || typeof x !== 'object') return false;
   const n = x as Record<string, unknown>;
   return typeof n.id === 'string' && typeof n.teamId === 'string' && typeof n.text === 'string';
+}
+
+function isSetlistSong(x: unknown): x is SetlistSong {
+  if (!x || typeof x !== 'object') return false;
+  const s = x as Record<string, unknown>;
+  return typeof s.id === 'string' && typeof s.teamId === 'string' && typeof s.title === 'string';
 }
 
 function isLineupAssignment(x: unknown): x is LineupAssignment {
@@ -109,10 +119,11 @@ export function parseBackup(raw: string): ImportResult {
   // 신규 배열은 관용적으로 걸러낸다 — .every()로 검사하면 한 줄 때문에 백업 전체가 복원 불가가 된다
   const lineup = Array.isArray(d.lineup) ? d.lineup.filter(isLineupAssignment) : [];
   const notes = Array.isArray(d.notes) ? d.notes.filter(isServiceNote) : [];
+  const setlist = Array.isArray(d.setlist) ? d.setlist.filter(isSetlistSong) : [];
   // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
   const tasks = migrateStepKeys(d.tasks);
-  return { ok: true, teams, tasks, profile, lineup, notes };
+  return { ok: true, teams, tasks, profile, lineup, notes, setlist };
 }
 
 export function readFileAsText(file: File): Promise<string> {

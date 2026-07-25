@@ -1735,6 +1735,48 @@ a {
   border-bottom: 0;
 }
 
+/* ─── 예배별 콘티 ─── */
+.setlist-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 14px;
+}
+
+.setlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setlist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* .text-input의 flex: 1 1 160px가 세로 배치에서 높이로 먹지 않도록 가로 행에서 다시 잡는다 */
+.setlist-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.setlist-key {
+  flex: none;
+  width: 64px;
+  text-align: center;
+}
+
+.setlist-add {
+  display: flex;
+  gap: 8px;
+}
+
+.setlist-add .text-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* ─── 예배 마침 기록 ─── */
 .note-panel {
   display: flex;
