@@ -45,6 +45,42 @@ export function monthlyTeamStats(tasks: Task[], teams: Team[], now: Date): TeamM
   });
 }
 
+export interface ServiceStepState {
+  team: Team;
+  /** 아직 안 끝난 첫 단계의 제목 — 전부 끝났으면 null */
+  nextStepTitle: string | null;
+  /** stepKey → 완료 여부. 그 예배에 없는 단계는 키 자체가 없다 */
+  state: Record<string, boolean>;
+}
+
+/** 이번 주 각 팀이 준비팩 어디까지 왔는지 — "지금 무엇이 결정 안 됐나"를 팀별로 답한다 */
+export function serviceStepStates(tasks: Task[], teams: Team[], weekStart: Date): ServiceStepState[] {
+  return teams.map((team) => {
+    const mine = tasks
+      .filter((t) => t.teamId === team.id && isInWeek(t.service ?? t.due, weekStart))
+      .slice()
+      .sort((a, b) => a.order - b.order);
+    const state: Record<string, boolean> = {};
+    for (const t of mine) if (t.stepKey) state[t.stepKey] = t.done;
+    const next = mine.find((t) => !t.done);
+    return { team, nextStepTitle: next ? next.title : null, state };
+  });
+}
+
+/**
+ * 앞 단계는 마쳤는데 뒤 단계가 남은 팀 — 저자가 지목한 '작성 ≠ 공유' 같은 짝을 찾는다.
+ * 예: 콘티(conti)는 정했는데 팀 공지(teamNotice)는 아직인 예배.
+ */
+export function stepPairGaps(
+  rows: ServiceStepState[],
+  doneKey: string,
+  pendingKey: string,
+): Team[] {
+  return rows
+    .filter((r) => r.state[doneKey] === true && r.state[pendingKey] === false)
+    .map((r) => r.team);
+}
+
 export interface ServedSummary {
   /** 완료한 업무가 하나라도 있는 서로 다른 (팀, 예배)의 수 */
   services: number;

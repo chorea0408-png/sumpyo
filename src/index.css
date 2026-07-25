@@ -592,6 +592,23 @@ a {
   margin-left: auto;
   font-size: 13px;
   color: var(--ink-3);
+  /* 단계 이름이 들어오므로 길어질 수 있다 — 줄바꿈 대신 말줄임 */
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 52%;
+}
+
+/* 앞 단계는 끝났는데 뒤 단계가 남은 팀 — 조용히 짚어주는 한 줄 */
+.weekly-gap {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--sage-deep);
+  background: var(--sage-soft);
+  border-radius: 12px;
+  padding: 8px 12px;
 }
 
 .svc-state.ok {
