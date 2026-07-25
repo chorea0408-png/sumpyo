@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Task, Team, TeamId } from '../types';
-import { addDays, ddayLabel, dueInfo, fmtDateLine, startOfWeek, toDateInput } from '../lib/date';
+import { addDays, ddayLabel, dueInfo, fmtDateLine, toDateInput } from '../lib/date';
+import { serviceTasks } from '../lib/priority';
 import { ProgressBar } from './ui';
 
 interface Props {
@@ -56,10 +57,8 @@ export default function TeamDetail({
   }, [onClose]);
 
   const serviceDate = viewDate;
-  const focusWeek = startOfWeek(serviceDate).getTime();
-  const inFocus = tasks.filter(
-    (t) => startOfWeek(new Date(t.service ?? t.due)).getTime() === focusWeek,
-  );
+  // 완료 축하(App.toggle)와 반드시 같은 기준으로 묶는다 — lib/priority.ts의 serviceTasks 참고
+  const inFocus = serviceTasks(tasks, team.id, serviceDate.toISOString());
   const sorted = inFocus
     .slice()
     .sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : a.order - b.order));

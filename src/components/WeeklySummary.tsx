@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Task, Team } from '../types';
 import { DAY_MS, isInWeek, startOfWeek } from '../lib/date';
 import { copyText, summaryText } from '../lib/share';
+import { servedServices } from '../lib/stats';
 
 type CopyState = 'idle' | 'ok' | 'fail';
 
@@ -45,6 +46,16 @@ export default function WeeklySummary({
   const copyLabel =
     copied === 'ok' ? '복사했어요 ✓' : copied === 'fail' ? '이 환경에선 복사가 막혀 있어요' : '주간 현황 복사';
 
+  // 매주 0으로 돌아가는 카운터 말고, 쌓이기만 하는 한 줄 — 봉사자의 몇 달이 어딘가엔 남아야 한다
+  const served = servedServices(tasks);
+  const servedSince = served.sinceIso ? new Date(served.sinceIso) : null;
+  const servedLine =
+    served.services === 0
+      ? null
+      : servedSince
+        ? `${servedSince.getFullYear()}년 ${servedSince.getMonth() + 1}월부터 ${served.services}번의 예배를 함께 준비했어요`
+        : `${served.services}번의 예배를 함께 준비했어요`;
+
   return (
     <section className="card weekly">
       <p className="card-label">이번 주 완료 기록</p>
@@ -65,6 +76,7 @@ export default function WeeklySummary({
       <p className="weekly-msg">
         {allDone ? '이번 주도 예배를 잘 준비했어요 🌿' : '차근차근, 잘 흘러가고 있어요 🌿'}
       </p>
+      {servedLine && <p className="weekly-served">{servedLine}</p>}
       <button className="btn btn-soft" onClick={copy}>
         {copyLabel}
       </button>

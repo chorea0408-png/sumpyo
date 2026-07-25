@@ -45,6 +45,29 @@ export function monthlyTeamStats(tasks: Task[], teams: Team[], now: Date): TeamM
   });
 }
 
+export interface ServedSummary {
+  /** 완료한 업무가 하나라도 있는 서로 다른 (팀, 예배)의 수 */
+  services: number;
+  /** 가장 이른 완료 시각(ISO) — 없으면 null */
+  sinceIso: string | null;
+}
+
+/**
+ * 함께 준비한 예배 수 — '전부 끝냈는가'가 아니라 '함께했는가'를 센다.
+ * 기준이 100%가 아니라 1건이라서 힘든 주에도 숫자가 오르고, 줄어들지 않는다.
+ * 끊길 연속 기록이 없으니 실패 상태 자체가 존재하지 않는다(스트릭·배지를 쓰지 않는 이유).
+ */
+export function servedServices(tasks: Task[]): ServedSummary {
+  const keys = new Set<string>();
+  let earliest: string | null = null;
+  for (const t of tasks) {
+    if (!t.done || !t.doneAt) continue;
+    keys.add(`${t.teamId}|${t.service ?? t.due}`);
+    if (earliest === null || t.doneAt < earliest) earliest = t.doneAt;
+  }
+  return { services: keys.size, sinceIso: earliest };
+}
+
 /** 이번 달 완료율이 가장 높은 팀을 콕 집는 하이라이트 문장 — 데이터 없으면 null */
 export function bestTeamHighlight(stats: TeamMonthStat[]): string | null {
   const withData = stats.filter((s) => s.total > 0);

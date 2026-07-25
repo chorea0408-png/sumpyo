@@ -13,7 +13,7 @@ import { INITIAL_TEAMS, findTeam, nextColor } from './data/teams';
 import { makeSeed } from './data/seed';
 import { makeWeekTasks } from './data/template';
 import * as storage from './lib/storage';
-import { pendingSorted } from './lib/priority';
+import { carriedOver, pendingSorted, serviceTasks } from './lib/priority';
 import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
 import { useSwUpdate } from './lib/useSwUpdate';
@@ -22,6 +22,7 @@ import EmptyHome from './components/EmptyHome';
 import Header from './components/Header';
 import PriorityCarousel from './components/PriorityCarousel';
 import Upcoming from './components/Upcoming';
+import CarriedOver from './components/CarriedOver';
 import UpcomingServices from './components/UpcomingServices';
 import CalendarView from './components/CalendarView';
 import MyPage from './components/MyPage';
@@ -59,7 +60,9 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const undoTimer = useRef<number | null>(null);
-  const [celebration, setCelebration] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<{ teamName: string; isThisWeek: boolean } | null>(
+    null,
+  );
   const celebrationTimer = useRef<number | null>(null);
   const [profile, setProfile] = useState<Profile>(() => storage.loadProfile() ?? { name: '', church: '' });
   const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
@@ -120,7 +123,16 @@ export default function App() {
   );
   const pending = useMemo(() => pendingSorted(filteredWeek), [filteredWeek]);
   const heroTasks = pending.slice(0, 5);
-  const upcoming = pending.slice(5, 8);
+  // 잘라내지 않고 나머지 전부를 넘긴다 — 몇 건이 남았는지는 Upcoming이 직접 보여준다
+  const upcoming = pending.slice(5);
+
+  /** 주 경계를 넘으며 홈에서 사라졌을 지난 주 미완료 업무 */
+  const CARRY_WEEKS = 4;
+  const carried = useMemo(() => {
+    const all = carriedOver(tasks, weekStart, CARRY_WEEKS);
+    return filter === 'all' ? all : all.filter((t) => t.teamId === filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, now, filter]);
 
   /** 전체 팀 중 가장 가까운 다음 예배 (헤더 D-day 강조용) */
   const nextServiceDday = useMemo(() => {
@@ -149,15 +161,21 @@ export default function App() {
       setUndo(null);
     }
 
-    // 이 토글로 해당 팀·예배의 마지막 남은 업무가 채워져 0%→100%가 됐는지 감지
-    if (willComplete && target?.service) {
-      const siblings = tasks.filter((t) => t.teamId === target.teamId && t.service === target.service);
+    // 이 토글로 해당 팀·예배의 마지막 남은 업무가 채워져 0%→100%가 됐는지 감지.
+    // 묶는 기준은 반드시 체크리스트 진행률과 같아야 한다(serviceTasks) —
+    // 다르면 "12/13인데 모두 마쳤어요"가 뜬다. 메모(service 없음)도 함께 센다.
+    if (willComplete && target) {
+      const anchor = target.service ?? target.due;
+      const siblings = serviceTasks(tasks, target.teamId, anchor);
       const nowAllDone = siblings.length > 0 && siblings.every((t) => t.id === id || t.done);
       if (nowAllDone) {
         const team = findTeam(teams, target.teamId);
         if (team) {
           if (celebrationTimer.current) window.clearTimeout(celebrationTimer.current);
-          setCelebration(team.shortName);
+          setCelebration({
+            teamName: team.shortName,
+            isThisWeek: startOfWeek(new Date(anchor)).getTime() === weekStart.getTime(),
+          });
           celebrationTimer.current = window.setTimeout(() => setCelebration(null), 2500);
         }
       }
@@ -440,6 +458,12 @@ export default function App() {
                     onOpenTeam={openTeam}
                   />
                   <Upcoming tasks={upcoming} teams={teams} now={now} onOpenTeam={openTeam} />
+                  <CarriedOver
+                    tasks={carried}
+                    teams={teams}
+                    weeksBack={CARRY_WEEKS}
+                    onToggle={toggle}
+                  />
                 </div>
                 <WeeklySummary tasks={tasks} teams={teams} now={now} signature={profile.signature} />
               </div>
@@ -516,7 +540,13 @@ export default function App() {
         />
       )}
 
-      {celebration && <Celebration teamName={celebration} onClose={() => setCelebration(null)} />}
+      {celebration && (
+        <Celebration
+          teamName={celebration.teamName}
+          isThisWeek={celebration.isThisWeek}
+          onClose={() => setCelebration(null)}
+        />
+      )}
 
       {needRefresh && <UpdateToast onReload={applyUpdate} />}
 

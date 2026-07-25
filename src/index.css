@@ -264,6 +264,15 @@ a {
   letter-spacing: 0.04em;
 }
 
+/* 카드 제목 옆 실제 건수 — 화면에 보이는 줄 수가 전부로 오해되지 않게 */
+.card-label-count {
+  margin-left: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  letter-spacing: normal;
+}
+
 .section-label {
   font-size: 17px;
   font-weight: 750;
@@ -593,6 +602,13 @@ a {
 .weekly-msg {
   color: var(--ink-2);
   font-size: 14.5px;
+}
+
+/* 누적 기록 — 조용히 쌓이기만 하는 한 줄. 목표도 비율도 없다 */
+.weekly-served {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
 
 .hint {

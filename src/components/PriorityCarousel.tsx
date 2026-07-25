@@ -40,7 +40,7 @@ export default function PriorityCarousel({ tasks, teams, now, onComplete, onOpen
   };
 
   return (
-    <section className="hero-wrap">
+    <section className="hero-wrap" aria-label={`가장 먼저 할 일 — 상위 ${tasks.length}건`}>
       <p className="card-label carousel-label">
         가장 먼저 할 일{tasks.length > 1 ? ` · ${active + 1}/${tasks.length}` : ''}
       </p>
