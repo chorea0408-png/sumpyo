@@ -93,6 +93,9 @@ export default function CalendarGrid({ teams, tasks, now, onOpenService, onAddPa
         })}
       </div>
 
+      {/* selectedDay는 startOfDay(now)로 초기화되고 null로 되돌아가는 경로가 없어
+          이 패널은 항상 렌더된다 — 데스크톱 2열 레이아웃(index.css)이 이 전제를 깔고 있다.
+          나중에 "선택 해제"를 추가하면 null일 때의 대체 콘텐츠도 같이 넣어야 한다. */}
       {selectedDay && (
         <div className="cal-day-detail">
           <p className="cal-day-detail-label">

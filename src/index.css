@@ -1310,7 +1310,9 @@ a {
     font-size: 14px;
   }
 
-  .calendar-view,
+  /* .calendar-view는 아래 꼬리 블록에서 자체 데스크톱 레이아웃을 가진다(Stage 2) —
+     여기 캡을 계속 두면 같은 명시도에서 이 블록이 파일 뒤쪽에 있는 꼬리 블록을 이길 수 있어
+     아예 제거한다. 마이페이지·팀관리는 아직 미착수라 캡을 유지한다. */
   .mypage,
   .teammanage {
     max-width: 640px;
@@ -2693,4 +2695,92 @@ a {
   color: var(--sage-deep);
   font-weight: 650;
   font-size: 14.5px;
+}
+
+/* ─── 데스크톱 · 화면별 레이아웃 (Stage 2) ───────────────────────────────
+   이 블록은 반드시 파일 맨 끝에 있어야 한다. cal- 계열, mypage 계열,
+   stats- 계열, tm- 계열 선택자의 기본 규칙이 위쪽(1367~2360행 부근)에 있어서,
+   그 위의 @media(min-width:900px) 블록(1233행)에 같은 선택자를 쓰면
+   같은 명시도에서 이 파일 뒤쪽 규칙이 이겨버린다.
+   그래서 화면별 데스크톱 레이아웃은 전부 여기, 파일의 가장 마지막에 둔다. */
+@media (min-width: 900px) {
+  /* 캘린더 — 달력 모드: 월 그리드 + 날짜 상세 패널을 나란히 */
+  .cal-grid-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'nav   detail'
+      'week  detail'
+      'days  detail';
+    column-gap: 32px;
+    align-items: start;
+    margin-top: 24px;
+  }
+
+  .cal-grid-nav {
+    grid-area: nav;
+  }
+
+  .cal-grid-weekdays {
+    grid-area: week;
+  }
+
+  .cal-grid-days {
+    grid-area: days;
+    gap: 4px;
+  }
+
+  .cal-day-detail {
+    grid-area: detail;
+  }
+
+  /* 정사각형(aspect-ratio:1)이면 넓은 열에서 87×87 칸에 숫자 하나만 남아 어색하다 —
+     가로형으로 바꿔 데스크톱 달력의 통상적인 비율을 맞춘다 */
+  .cal-day {
+    aspect-ratio: auto;
+    min-height: 64px;
+    padding: 6px 0;
+    border-radius: 10px;
+  }
+
+  .cal-day-num {
+    font-size: 14.5px;
+  }
+
+  .cal-day-detail {
+    margin-top: 0;
+    /* 없으면 grid가 오른쪽 칸을 왼쪽 열 높이만큼 늘려버린다 */
+    align-self: start;
+    position: sticky;
+    /* 상단 고정 네비(Stage 2-A)가 생기면 64px(바 높이)+20px로 올릴 것 */
+    top: 20px;
+    padding: 18px 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .cal-day-detail-label {
+    padding: 0 2px;
+  }
+
+  /* 카드 패널 안에 또 카드 그림자가 겹치면 진흙탕처럼 보인다 */
+  .cal-day-detail .svc-item {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 10px;
+    margin-bottom: 0;
+    border-bottom: 1px solid #f3efe7;
+  }
+
+  .cal-day-detail .svc-item:last-child {
+    border-bottom: 0;
+  }
+
+  /* 캘린더 — 목록 모드: 시간순 읽기 순서를 지키기 위해 2열로 쪼개지 않고 폭만 제한 */
+  .cal-month,
+  .calendar-view > .pack-empty {
+    max-width: 720px;
+  }
 }
