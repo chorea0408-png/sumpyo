@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { LineupAssignment, Team } from '../types';
+import type { LineupAssignment, NoticeClosingTemplate, Team } from '../types';
 import { recommendLineup, type LineupPick } from '../lib/lineup';
 import { LINEUP_ROLES, roleLabel, teamLineupSlots } from '../data/roles';
 import { fmtDateShort, nextServiceOn } from '../lib/date';
@@ -13,9 +13,10 @@ interface Props {
   history: LineupAssignment[];
   onConfirm: (service: string, picks: LineupPick[]) => void;
   signature?: string;
+  noticeTemplates: NoticeClosingTemplate[];
 }
 
-export default function LineupEditor({ team, now, history, onConfirm, signature }: Props) {
+export default function LineupEditor({ team, now, history, onConfirm, signature, noticeTemplates }: Props) {
   const members = team.members ?? [];
   const slots = teamLineupSlots(team.lineupSlots);
   const service = useMemo(
@@ -69,8 +70,10 @@ export default function LineupEditor({ team, now, history, onConfirm, signature 
   const nameOf = (id: string | null) => (id ? (members.find((m) => m.id === id)?.name ?? '(삭제된 팀원)') : '');
 
   const [copied, setCopied] = useState<CopyState>('idle');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('default');
   const copyNotice = async () => {
-    const ok = await copyText(noticeText(team, service, picks, members, signature));
+    const chosen = noticeTemplates.find((t) => t.id === selectedTemplateId);
+    const ok = await copyText(noticeText(team, service, picks, members, signature, chosen?.text));
     setCopied(ok ? 'ok' : 'fail');
     setTimeout(() => setCopied('idle'), 2500);
   };
@@ -105,6 +108,21 @@ export default function LineupEditor({ team, now, history, onConfirm, signature 
               </li>
             ))}
           </ul>
+          {noticeTemplates.length > 0 && (
+            <select
+              className="date-input notice-tmpl-picker"
+              value={selectedTemplateId}
+              onChange={(e) => setSelectedTemplateId(e.target.value)}
+              aria-label="공지문 마무리 문구 선택"
+            >
+              <option value="default">기본</option>
+              {noticeTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          )}
           <button type="button" className="btn btn-soft full submit-gap" onClick={copyNotice}>
             {copyLabel}
           </button>

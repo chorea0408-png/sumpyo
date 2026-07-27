@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   LineupAssignment,
   LineupSlot,
+  NoticeClosingTemplate,
   Profile,
   ServiceNote,
   SetlistSong,
@@ -73,6 +74,9 @@ export default function App() {
   const [lineup, setLineup] = useState<LineupAssignment[]>(() => storage.loadLineup());
   const [notes, setNotes] = useState<ServiceNote[]>(() => storage.loadNotes());
   const [setlist, setSetlist] = useState<SetlistSong[]>(() => storage.loadSetlist());
+  const [noticeTemplates, setNoticeTemplates] = useState<NoticeClosingTemplate[]>(() =>
+    storage.loadNoticeTemplates(),
+  );
   const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
@@ -82,6 +86,7 @@ export default function App() {
   useEffect(() => storage.saveLineup(lineup), [lineup]);
   useEffect(() => storage.saveNotes(notes), [notes]);
   useEffect(() => storage.saveSetlist(setlist), [setlist]);
+  useEffect(() => storage.saveNoticeTemplates(noticeTemplates), [noticeTemplates]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -365,6 +370,7 @@ export default function App() {
     importedLineup: LineupAssignment[],
     importedNotes: ServiceNote[],
     importedSetlist: SetlistSong[],
+    importedNoticeTemplates: NoticeClosingTemplate[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
@@ -372,6 +378,7 @@ export default function App() {
     setLineup(importedLineup);
     setNotes(importedNotes);
     setSetlist(importedSetlist);
+    setNoticeTemplates(importedNoticeTemplates);
     setFilter('all');
   };
 
@@ -412,6 +419,7 @@ export default function App() {
       setLineup([]);
       setNotes([]);
       setSetlist([]);
+      setNoticeTemplates([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -438,6 +446,7 @@ export default function App() {
             setLineup([]);
             setNotes([]);
             setSetlist([]);
+            setNoticeTemplates([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -459,6 +468,7 @@ export default function App() {
           backLabel={returnToDetail ? '체크리스트로 돌아가기' : '마이페이지로 돌아가기'}
           signature={profile.signature}
           notes={notes}
+          noticeTemplates={noticeTemplates}
           onBack={() => {
             setTeamManageId(null);
             setTeamManageFocus(undefined);
@@ -585,6 +595,8 @@ export default function App() {
           lineup={lineup}
           notes={notes}
           setlist={setlist}
+          noticeTemplates={noticeTemplates}
+          onChangeNoticeTemplates={setNoticeTemplates}
           now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}

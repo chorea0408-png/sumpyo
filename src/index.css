@@ -2575,6 +2575,12 @@ a {
   min-width: 0;
 }
 
+/* 공지문 마무리 문구 선택 — 인라인 좌석용 lineup-select와 달리 버튼 위에 폭 전체로 선다 */
+.notice-tmpl-picker {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
 .lineup-none {
   font-size: 13px;
   color: var(--ink-3);
@@ -2674,6 +2680,12 @@ a {
 .template-title-input {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* '기본' 항목은 저장되지 않는 가상 행이라 인풋이 아니라 라벨로 보여준다 */
+.notice-tmpl-default-label {
+  font-weight: 700;
+  color: var(--sage-deep);
 }
 
 .tmpl-remove {

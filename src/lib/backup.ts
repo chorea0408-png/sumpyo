@@ -1,4 +1,12 @@
-import type { LineupAssignment, Profile, ServiceNote, SetlistSong, Task, Team } from '../types';
+import type {
+  LineupAssignment,
+  NoticeClosingTemplate,
+  Profile,
+  ServiceNote,
+  SetlistSong,
+  Task,
+  Team,
+} from '../types';
 import { migrateMembers, migrateStepKeys } from './storage';
 
 const BACKUP_VERSION = 1;
@@ -13,6 +21,7 @@ interface BackupFile {
   lineup?: LineupAssignment[];
   notes?: ServiceNote[];
   setlist?: SetlistSong[];
+  noticeTemplates?: NoticeClosingTemplate[];
 }
 
 function fmtStamp(d: Date): string {
@@ -27,6 +36,7 @@ export function exportBackup(
   lineup?: LineupAssignment[],
   notes?: ServiceNote[],
   setlist?: SetlistSong[],
+  noticeTemplates?: NoticeClosingTemplate[],
 ): void {
   const payload: BackupFile = {
     app: 'sumpyo',
@@ -38,6 +48,7 @@ export function exportBackup(
     lineup,
     notes,
     setlist,
+    noticeTemplates,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -59,6 +70,7 @@ export type ImportResult =
       lineup: LineupAssignment[];
       notes: ServiceNote[];
       setlist: SetlistSong[];
+      noticeTemplates: NoticeClosingTemplate[];
     }
   | { ok: false; error: string };
 
@@ -98,6 +110,12 @@ function isLineupAssignment(x: unknown): x is LineupAssignment {
   return typeof a.id === 'string' && typeof a.teamId === 'string' && typeof a.memberId === 'string';
 }
 
+function isNoticeClosingTemplate(x: unknown): x is NoticeClosingTemplate {
+  if (!x || typeof x !== 'object') return false;
+  const t = x as Record<string, unknown>;
+  return typeof t.id === 'string' && typeof t.label === 'string' && typeof t.text === 'string';
+}
+
 /** 백업 파일 읽기 — 형식이 다르면 실패 사유를 그대로 반환한다 */
 export function parseBackup(raw: string): ImportResult {
   let data: unknown;
@@ -120,10 +138,13 @@ export function parseBackup(raw: string): ImportResult {
   const lineup = Array.isArray(d.lineup) ? d.lineup.filter(isLineupAssignment) : [];
   const notes = Array.isArray(d.notes) ? d.notes.filter(isServiceNote) : [];
   const setlist = Array.isArray(d.setlist) ? d.setlist.filter(isSetlistSong) : [];
+  const noticeTemplates = Array.isArray(d.noticeTemplates)
+    ? d.noticeTemplates.filter(isNoticeClosingTemplate)
+    : [];
   // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
   const tasks = migrateStepKeys(d.tasks);
-  return { ok: true, teams, tasks, profile, lineup, notes, setlist };
+  return { ok: true, teams, tasks, profile, lineup, notes, setlist, noticeTemplates };
 }
 
 export function readFileAsText(file: File): Promise<string> {

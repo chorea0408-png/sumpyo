@@ -49,6 +49,13 @@ export interface Team {
   customTemplate?: TemplateStep[];
 }
 
+/** 사용자가 저장한 공지문 마무리 문구 — '기본'은 저장되지 않는 가상 항목이라 여기 포함 안 됨 */
+export interface NoticeClosingTemplate {
+  id: string;
+  label: string;
+  text: string;
+}
+
 export interface Profile {
   name: string;
   church: string;

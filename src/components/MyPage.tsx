@@ -1,9 +1,19 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import type { LineupAssignment, Profile, ServiceNote, SetlistSong, Task, Team, TeamId } from '../types';
+import type {
+  LineupAssignment,
+  NoticeClosingTemplate,
+  Profile,
+  ServiceNote,
+  SetlistSong,
+  Task,
+  Team,
+  TeamId,
+} from '../types';
 import { exportBackup, parseBackup, readFileAsText } from '../lib/backup';
 import { downloadIcs } from '../lib/ics';
 import { TeamChip } from './ui';
 import StatsReport from './StatsReport';
+import NoticeTemplateManager from './NoticeTemplateManager';
 
 interface Props {
   teams: Team[];
@@ -18,6 +28,8 @@ interface Props {
   onManageTeam: (teamId: TeamId) => void;
   notes: ServiceNote[];
   setlist: SetlistSong[];
+  noticeTemplates: NoticeClosingTemplate[];
+  onChangeNoticeTemplates: (t: NoticeClosingTemplate[]) => void;
   onImport: (
     teams: Team[],
     tasks: Task[],
@@ -25,6 +37,7 @@ interface Props {
     lineup: LineupAssignment[],
     notes: ServiceNote[],
     setlist: SetlistSong[],
+    noticeTemplates: NoticeClosingTemplate[],
   ) => void;
 }
 
@@ -37,6 +50,8 @@ export default function MyPage({
   lineup,
   notes,
   setlist,
+  noticeTemplates,
+  onChangeNoticeTemplates,
   now,
   onSaveProfile,
   onShowIntro,
@@ -71,7 +86,15 @@ export default function MyPage({
       return;
     }
     if (window.confirm(`백업 파일에는 팀 ${result.teams.length}개, 업무 ${result.tasks.length}건이 있어요. 지금 데이터를 덮어쓸까요?`)) {
-      onImport(result.teams, result.tasks, result.profile, result.lineup, result.notes, result.setlist);
+      onImport(
+        result.teams,
+        result.tasks,
+        result.profile,
+        result.lineup,
+        result.notes,
+        result.setlist,
+        result.noticeTemplates,
+      );
       setImportState('ok');
       setImportMsg('불러오기 완료');
     }
@@ -144,12 +167,19 @@ export default function MyPage({
       )}
 
       <div className="mypage-block">
+        <p className="mypage-section-label">공지문 마무리 문구</p>
+        <section className="card mypage-section">
+          <NoticeTemplateManager templates={noticeTemplates} onChange={onChangeNoticeTemplates} />
+        </section>
+      </div>
+
+      <div className="mypage-block">
         <p className="mypage-section-label">데이터</p>
         <section className="card mypage-section">
           <button
             className="mypage-row"
             onClick={() => {
-              exportBackup(teams, tasks, profile, lineup, notes, setlist);
+              exportBackup(teams, tasks, profile, lineup, notes, setlist, noticeTemplates);
               notifyExport('백업 파일을 내려받았어요');
             }}
           >

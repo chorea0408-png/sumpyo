@@ -3,6 +3,7 @@ import type {
   LineupAssignment,
   LineupRole,
   LineupSlot,
+  NoticeClosingTemplate,
   ServiceNote,
   Team,
   TeamMember,
@@ -40,6 +41,7 @@ interface Props {
   /** 공지문에 자동으로 붙는 서명 문구 */
   signature?: string;
   notes: ServiceNote[];
+  noticeTemplates: NoticeClosingTemplate[];
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -59,6 +61,7 @@ export default function TeamManage({
   backLabel,
   signature,
   notes,
+  noticeTemplates,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -285,6 +288,7 @@ export default function TeamManage({
               history={history}
               onConfirm={onConfirmLineup}
               signature={signature}
+              noticeTemplates={noticeTemplates}
             />
             <LineupHistory team={team} now={now} history={history} />
           </section>

@@ -28,6 +28,10 @@ export function summaryText(tasks: Task[], teams: Team[], now: Date, signature?:
   return lines.join('\n');
 }
 
+/** 공지문 마무리 문장 기본값 — 곡 수를 그대로 반영한다(사용자 커스텀 문구는 고정 텍스트라 이걸 대신할 뿐) */
+export const defaultNoticeClosing = (songCount: number) =>
+  `콘티 ${songCount}곡 준비 중이에요. 특이사항 있으면 미리 알려주세요 🙏`;
+
 /** 확정된 라인업을 카톡에 붙여넣는 팀 공지문 텍스트로 변환 */
 export function noticeText(
   team: Team,
@@ -35,6 +39,7 @@ export function noticeText(
   picks: LineupPick[],
   members: TeamMember[],
   signature?: string,
+  closingText?: string,
 ): string {
   const nameOf = (id: string | null) => (id ? members.find((m) => m.id === id)?.name : undefined);
   const roleLines = picks
@@ -48,7 +53,7 @@ export function noticeText(
   if (roleLines.length > 0) {
     lines.push('🎤 라인업', ...roleLines, '');
   }
-  lines.push(`콘티 ${team.songCount}곡 준비 중이에요. 특이사항 있으면 미리 알려주세요 🙏`);
+  lines.push(closingText && closingText.trim() ? closingText.trim() : defaultNoticeClosing(team.songCount));
   if (signature && signature.trim()) lines.push('', signature.trim());
   return lines.join('\n');
 }

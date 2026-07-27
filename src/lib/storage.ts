@@ -1,5 +1,6 @@
 import type {
   LineupAssignment,
+  NoticeClosingTemplate,
   Profile,
   ServiceNote,
   SetlistSong,
@@ -16,6 +17,7 @@ const K_PROFILE = 'sumpyo.profile.v1';
 const K_LINEUP = 'sumpyo.lineup.v1';
 const K_NOTES = 'sumpyo.notes.v1';
 const K_SETLIST = 'sumpyo.setlist.v1';
+const K_NOTICE_TEMPLATES = 'sumpyo.noticeTemplates.v1';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -77,6 +79,9 @@ export const saveNotes = (n: ServiceNote[]) => write(K_NOTES, n);
 export const loadSetlist = () => read<SetlistSong[]>(K_SETLIST, []);
 export const saveSetlist = (s: SetlistSong[]) => write(K_SETLIST, s);
 
+export const loadNoticeTemplates = () => read<NoticeClosingTemplate[]>(K_NOTICE_TEMPLATES, []);
+export const saveNoticeTemplates = (t: NoticeClosingTemplate[]) => write(K_NOTICE_TEMPLATES, t);
+
 /** 데모 데이터 초기화 — 진입 여부(entered)는 유지 */
 export function clearData(): void {
   localStorage.removeItem(K_TASKS);
@@ -84,4 +89,5 @@ export function clearData(): void {
   localStorage.removeItem(K_LINEUP);
   localStorage.removeItem(K_NOTES);
   localStorage.removeItem(K_SETLIST);
+  localStorage.removeItem(K_NOTICE_TEMPLATES);
 }
