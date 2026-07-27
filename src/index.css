@@ -1364,10 +1364,9 @@ a {
     display: block;
   }
 
-  /* .calendar-view는 아래 꼬리 블록에서 자체 데스크톱 레이아웃을 가진다(Stage 2) —
+  /* .calendar-view·.mypage는 아래 꼬리 블록에서 자체 데스크톱 레이아웃을 가진다(Stage 2) —
      여기 캡을 계속 두면 같은 명시도에서 이 블록이 파일 뒤쪽에 있는 꼬리 블록을 이길 수 있어
-     아예 제거한다. 마이페이지·팀관리는 아직 미착수라 캡을 유지한다. */
-  .mypage,
+     아예 제거한다. 팀관리는 아직 미착수라 캡을 유지한다. */
   .teammanage {
     max-width: 640px;
     margin: 0 auto;
@@ -2807,8 +2806,8 @@ a {
     /* 없으면 grid가 오른쪽 칸을 왼쪽 열 높이만큼 늘려버린다 */
     align-self: start;
     position: sticky;
-    /* 상단 고정 네비(Stage 2-A)가 생기면 64px(바 높이)+20px로 올릴 것 */
-    top: 20px;
+    /* 상단 고정 네비(Stage 2-A, 64px)만큼 내려서 겹치지 않게 */
+    top: 84px;
     padding: 18px 16px;
     background: var(--card);
     border-radius: var(--radius);
@@ -2836,5 +2835,42 @@ a {
   .cal-month,
   .calendar-view > .pack-empty {
     max-width: 720px;
+  }
+
+  /* 마이페이지 — 라벨+카드 6쌍을 2열 카드 배치로. 순서는 DOM 그대로(auto-flow),
+     통계만 mypage-block-wide로 폭 전체를 차지해 "설정 / 통계 / 도구" 흐름을 만든다. */
+  .mypage {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+    row-gap: 28px;
+  }
+
+  .mypage-title,
+  .mypage-tagline {
+    grid-column: 1 / -1;
+  }
+
+  .mypage-block-wide {
+    grid-column: 1 / -1;
+  }
+
+  .stats-report {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 24px;
+  }
+
+  .stats-trend {
+    height: 104px;
+  }
+
+  .stats-team-row {
+    grid-template-columns: 76px 1fr 52px;
+  }
+
+  /* stats-report가 grid로 바뀌며 3번째 자식(하이라이트)이 왼쪽 칸에만 배치되는 걸 막는다 */
+  .stats-highlight {
+    grid-column: 1 / -1;
   }
 }
