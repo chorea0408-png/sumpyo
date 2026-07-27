@@ -1210,6 +1210,22 @@ a {
   font-weight: 650;
 }
 
+/* 워드마크·팀관리용 상단 네비 래퍼는 모바일에선 숨긴다 —
+   데스크톱 전환(1233행 블록 이후)에서만 보인다. bn-pills는 모바일에서
+   .bottom-nav의 flex 자리를 그대로 이어받는 래퍼일 뿐이다. */
+.bn-brand {
+  display: none;
+}
+
+.bn-pills {
+  display: flex;
+  flex: 1;
+}
+
+.tm-nav-wrap {
+  display: none;
+}
+
 /* ─── 완료 취소 토스트 ─── */
 .undo-toast {
   position: fixed;
@@ -1236,7 +1252,13 @@ a {
   }
 
   .header {
-    padding-top: 44px;
+    padding-top: 28px;
+  }
+
+  /* 상단 고정 네비(64px)가 여백을 대신하니 헤더 자체 padding-top은 모바일과 같다.
+     오프셋은 .app이 아니라 body에 준다 — 팀관리는 .app 밖 프래그먼트라 .app padding으로는 안 닿는다. */
+  body:has(.bottom-nav) {
+    padding-top: 64px;
   }
 
   .greeting {
@@ -1270,7 +1292,7 @@ a {
   }
 
   .app {
-    padding-bottom: 40px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
   }
 
   .fab {
@@ -1281,13 +1303,41 @@ a {
     bottom: calc(28px + env(safe-area-inset-bottom));
   }
 
+  /* 알약 3개는 그대로 두고, 하단 고정 바를 상단 고정 바로 전환한다.
+     .container와 같은 32px 좌우 패딩을 줘서 워드마크가 콘텐츠 레일과 나란히 시작하게 하고,
+     좌우 1fr 트랙이 대칭이라 가운데 트랙(알약)은 뷰포트 중앙에 온다. */
   .bottom-nav {
-    position: static;
-    background: transparent;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 64px;
+    padding: 0 32px;
+    background: rgba(251, 250, 247, 0.86);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     box-shadow: none;
-    justify-content: center;
+    border-bottom: 1px solid rgba(29, 29, 31, 0.06);
+  }
+
+  .bn-brand {
+    display: inline;
+    justify-self: start;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--sage-deep);
+  }
+
+  .bn-pills {
+    grid-column: 2;
+    flex: none;
     gap: 10px;
-    padding: 28px 0 0;
   }
 
   .bn-item {
@@ -1308,6 +1358,10 @@ a {
 
   .bn-label {
     font-size: 14px;
+  }
+
+  .tm-nav-wrap {
+    display: block;
   }
 
   /* .calendar-view는 아래 꼬리 블록에서 자체 데스크톱 레이아웃을 가진다(Stage 2) —

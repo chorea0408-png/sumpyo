@@ -14,19 +14,24 @@ const TABS: { id: ViewId; label: string; icon: string }[] = [
 export default function BottomNav({ active, onChange }: Props) {
   return (
     <nav className="bottom-nav" aria-label="주요 메뉴">
-      {TABS.map((t) => (
-        <button
-          key={t.id}
-          className={`bn-item${active === t.id ? ' on' : ''}`}
-          aria-current={active === t.id ? 'page' : undefined}
-          onClick={() => onChange(t.id)}
-        >
-          <span className="bn-icon" aria-hidden>
-            {t.icon}
-          </span>
-          <span className="bn-label">{t.label}</span>
-        </button>
-      ))}
+      <span className="bn-brand" aria-hidden>
+        숨표
+      </span>
+      <div className="bn-pills">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`bn-item${active === t.id ? ' on' : ''}`}
+            aria-current={active === t.id ? 'page' : undefined}
+            onClick={() => onChange(t.id)}
+          >
+            <span className="bn-icon" aria-hidden>
+              {t.icon}
+            </span>
+            <span className="bn-label">{t.label}</span>
+          </button>
+        ))}
+      </div>
     </nav>
   );
 }

@@ -390,6 +390,16 @@ export default function App() {
     setTeamManageId(teamId);
   };
 
+  /** 데스크톱 상단 네비에서 팀 관리 화면을 나가며 다른 탭으로 이동 —
+      manageTeam이 view보다 먼저 early return하므로 setView만으로는 화면이 안 바뀐다 */
+  const leaveManage = (v: ViewId) => {
+    setTeamManageId(null);
+    setTeamManageFocus(undefined);
+    setReturnToDetail(null);
+    setDetail(null);
+    setView(v);
+  };
+
   const reset = () => {
     const hasRealData = teams.some((t) => t.custom);
     const message = hasRealData
@@ -463,6 +473,7 @@ export default function App() {
           onConfirmLineup={(service, picks) => confirmLineup(manageTeam.id, service, picks)}
           onUpdateTemplate={(tpl) => updateTeamTemplate(manageTeam.id, tpl)}
           onDelete={() => deleteTeam(manageTeam.id)}
+          onNavigate={leaveManage}
         />
         {needRefresh && <UpdateToast onReload={applyUpdate} />}
       </>

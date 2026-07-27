@@ -17,6 +17,7 @@ import LineupEditor from './LineupEditor';
 import LineupHistory from './LineupHistory';
 import ServiceNoteHistory from './ServiceNoteHistory';
 import TemplateEditor from './TemplateEditor';
+import BottomNav, { type ViewId } from './BottomNav';
 
 export interface BasicInfo {
   shortName: string;
@@ -46,6 +47,8 @@ interface Props {
   onConfirmLineup: (service: string, picks: LineupPick[]) => void;
   onUpdateTemplate: (template: TemplateStep[] | undefined) => void;
   onDelete: () => void;
+  /** 데스크톱 상단 네비에서 다른 탭 선택 시 — 팀 관리 상태를 정리하고 이동 */
+  onNavigate: (v: ViewId) => void;
 }
 
 export default function TeamManage({
@@ -63,6 +66,7 @@ export default function TeamManage({
   onConfirmLineup,
   onUpdateTemplate,
   onDelete,
+  onNavigate,
 }: Props) {
   const section = focusSection ?? 'basic';
   const [shortName, setShortName] = useState(team.shortName);
@@ -92,6 +96,9 @@ export default function TeamManage({
 
   return (
     <div className="container main teammanage">
+      <div className="tm-nav-wrap">
+        <BottomNav active="mypage" onChange={onNavigate} />
+      </div>
       <header className="tm-header">
         <button className="icon-btn" aria-label={backLabel} onClick={onBack}>
           ‹
