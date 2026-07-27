@@ -4,6 +4,7 @@ import type {
   NoticeClosingTemplate,
   Profile,
   Project,
+  ProjectExpense,
   ProjectMilestone,
   ServiceNote,
   SetlistSong,
@@ -28,6 +29,7 @@ interface BackupFile {
   expenses?: Expense[];
   projects?: Project[];
   milestones?: ProjectMilestone[];
+  projectExpenses?: ProjectExpense[];
 }
 
 function fmtStamp(d: Date): string {
@@ -46,6 +48,7 @@ export function exportBackup(
   expenses?: Expense[],
   projects?: Project[],
   milestones?: ProjectMilestone[],
+  projectExpenses?: ProjectExpense[],
 ): void {
   const payload: BackupFile = {
     app: 'sumpyo',
@@ -61,6 +64,7 @@ export function exportBackup(
     expenses,
     projects,
     milestones,
+    projectExpenses,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -86,6 +90,7 @@ export type ImportResult =
       expenses: Expense[];
       projects: Project[];
       milestones: ProjectMilestone[];
+      projectExpenses: ProjectExpense[];
     }
   | { ok: false; error: string };
 
@@ -162,6 +167,19 @@ function isProjectMilestone(x: unknown): x is ProjectMilestone {
   );
 }
 
+function isProjectExpense(x: unknown): x is ProjectExpense {
+  if (!x || typeof x !== 'object') return false;
+  const e = x as Record<string, unknown>;
+  return (
+    typeof e.id === 'string' &&
+    typeof e.projectId === 'string' &&
+    typeof e.date === 'string' &&
+    typeof e.category === 'string' &&
+    typeof e.title === 'string' &&
+    typeof e.amount === 'number'
+  );
+}
+
 /** 백업 파일 읽기 — 형식이 다르면 실패 사유를 그대로 반환한다 */
 export function parseBackup(raw: string): ImportResult {
   let data: unknown;
@@ -190,6 +208,7 @@ export function parseBackup(raw: string): ImportResult {
   const expenses = Array.isArray(d.expenses) ? d.expenses.filter(isExpense) : [];
   const projects = Array.isArray(d.projects) ? d.projects.filter(isProject) : [];
   const milestones = Array.isArray(d.milestones) ? d.milestones.filter(isProjectMilestone) : [];
+  const projectExpenses = Array.isArray(d.projectExpenses) ? d.projectExpenses.filter(isProjectExpense) : [];
   // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
   const tasks = migrateStepKeys(d.tasks);
@@ -205,6 +224,7 @@ export function parseBackup(raw: string): ImportResult {
     expenses,
     projects,
     milestones,
+    projectExpenses,
   };
 }
 

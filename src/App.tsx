@@ -7,6 +7,8 @@ import type {
   NoticeClosingTemplate,
   Profile,
   Project,
+  ProjectExpense,
+  ProjectExpenseCategory,
   ProjectId,
   ProjectMilestone,
   ServiceNote,
@@ -88,6 +90,7 @@ export default function App() {
   const [expenses, setExpenses] = useState<Expense[]>(() => storage.loadExpenses());
   const [projects, setProjects] = useState<Project[]>(() => storage.loadProjects());
   const [milestones, setMilestones] = useState<ProjectMilestone[]>(() => storage.loadMilestones());
+  const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>(() => storage.loadProjectExpenses());
   const [longViewOn, setLongViewOn] = useState<boolean>(() => storage.loadLongView());
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [projectDetailId, setProjectDetailId] = useState<ProjectId | null>(null);
@@ -104,6 +107,7 @@ export default function App() {
   useEffect(() => storage.saveExpenses(expenses), [expenses]);
   useEffect(() => storage.saveProjects(projects), [projects]);
   useEffect(() => storage.saveMilestones(milestones), [milestones]);
+  useEffect(() => storage.saveProjectExpenses(projectExpenses), [projectExpenses]);
   useEffect(() => storage.saveLongView(longViewOn), [longViewOn]);
 
   /** 길게 보기 모드를 끄는 순간 프로젝트 탭에 있었다면 홈으로 — 빈 화면 대신 안전한 곳으로 */
@@ -301,6 +305,7 @@ export default function App() {
   const deleteProject = (id: ProjectId) => {
     setProjects((ps) => ps.filter((p) => p.id !== id));
     setMilestones((ms) => ms.filter((m) => m.projectId !== id));
+    setProjectExpenses((es) => es.filter((e) => e.projectId !== id));
     setProjectDetailId(null);
   };
 
@@ -320,6 +325,17 @@ export default function App() {
 
   const reorderMilestones = (projectId: ProjectId, ordered: ProjectMilestone[]) =>
     setMilestones((ms) => [...ms.filter((m) => m.projectId !== projectId), ...ordered]);
+
+  const addProjectExpense = (
+    projectId: ProjectId,
+    date: string,
+    category: ProjectExpenseCategory,
+    title: string,
+    amount: number,
+  ) =>
+    setProjectExpenses((es) => [...es, { id: crypto.randomUUID(), projectId, date, category, title, amount }]);
+
+  const removeProjectExpense = (id: string) => setProjectExpenses((es) => es.filter((e) => e.id !== id));
 
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -443,6 +459,7 @@ export default function App() {
     importedExpenses: Expense[],
     importedProjects: Project[],
     importedMilestones: ProjectMilestone[],
+    importedProjectExpenses: ProjectExpense[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
@@ -454,6 +471,7 @@ export default function App() {
     setExpenses(importedExpenses);
     setProjects(importedProjects);
     setMilestones(importedMilestones);
+    setProjectExpenses(importedProjectExpenses);
     setFilter('all');
   };
 
@@ -498,6 +516,7 @@ export default function App() {
       setExpenses([]);
       setProjects([]);
       setMilestones([]);
+      setProjectExpenses([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -528,6 +547,7 @@ export default function App() {
             setExpenses([]);
             setProjects([]);
             setMilestones([]);
+            setProjectExpenses([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -695,6 +715,7 @@ export default function App() {
           expenses={expenses}
           projects={projects}
           milestones={milestones}
+          projectExpenses={projectExpenses}
           longViewOn={longViewOn}
           onToggleLongView={setLongViewOn}
           now={now}
@@ -786,6 +807,12 @@ export default function App() {
           onRenameMilestone={renameMilestone}
           onRemoveMilestone={removeMilestone}
           onReorderMilestones={reorderMilestones}
+          projectExpenses={projectExpenses.filter((e) => e.projectId === projectDetailId)}
+          onAddProjectExpense={(date, category, title, amount) =>
+            addProjectExpense(projectDetailId, date, category, title, amount)
+          }
+          onRemoveProjectExpense={removeProjectExpense}
+          signature={profile.signature}
           onClose={() => setProjectDetailId(null)}
         />
       )}

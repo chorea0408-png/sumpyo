@@ -1,6 +1,7 @@
-import type { Task, Team, TeamMember } from '../types';
+import type { Project, ProjectExpense, Task, Team, TeamMember } from '../types';
 import type { LineupPick } from './lineup';
 import { roleLabel } from '../data/roles';
+import { projectExpenseCategoryLabel } from '../data/projectExpenseCategories';
 import { dueInfo, fmtDateLine, fmtDateShort } from './date';
 import { overdue, pendingSorted } from './priority';
 
@@ -54,6 +55,31 @@ export function noticeText(
     lines.push('🎤 라인업', ...roleLines, '');
   }
   lines.push(closingText && closingText.trim() ? closingText.trim() : defaultNoticeClosing(team.songCount));
+  if (signature && signature.trim()) lines.push('', signature.trim());
+  return lines.join('\n');
+}
+
+/** 프로젝트 지출 내역을 카톡에 붙여넣는 정산문 텍스트로 변환 */
+export function projectSettlementText(
+  project: Project,
+  expenses: ProjectExpense[],
+  signature?: string,
+): string {
+  const own = expenses
+    .filter((e) => e.projectId === project.id)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const lines = [`📋 ${project.title} 정산`, ''];
+  if (own.length === 0) {
+    lines.push('기록된 지출이 없어요.');
+  } else {
+    for (const e of own) {
+      lines.push(
+        `· ${fmtDateShort(new Date(`${e.date}T00:00:00`))} ${projectExpenseCategoryLabel(e.category)} - ${e.title} ${e.amount.toLocaleString('ko-KR')}원`,
+      );
+    }
+    const total = own.reduce((sum, e) => sum + e.amount, 0);
+    lines.push('', `합계 ${total.toLocaleString('ko-KR')}원`);
+  }
   if (signature && signature.trim()) lines.push('', signature.trim());
   return lines.join('\n');
 }

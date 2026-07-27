@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { Project, ProjectId, ProjectMilestone } from '../types';
+import type { Project, ProjectExpense, ProjectExpenseCategory, ProjectId, ProjectMilestone } from '../types';
+import { copyText, projectSettlementText } from '../lib/share';
 import { ProgressBar } from './ui';
+import ProjectExpenseTracker from './ProjectExpenseTracker';
 
 interface Props {
   project: Project;
@@ -15,8 +17,15 @@ interface Props {
   onRenameMilestone: (id: string, title: string) => void;
   onRemoveMilestone: (id: string) => void;
   onReorderMilestones: (projectId: ProjectId, milestones: ProjectMilestone[]) => void;
+  /** 이 프로젝트의 지출 기록만 */
+  projectExpenses: ProjectExpense[];
+  onAddProjectExpense: (date: string, category: ProjectExpenseCategory, title: string, amount: number) => void;
+  onRemoveProjectExpense: (id: string) => void;
+  signature?: string;
   onClose: () => void;
 }
+
+type CopyState = 'idle' | 'ok' | 'fail';
 
 export default function ProjectDetail({
   project,
@@ -30,10 +39,15 @@ export default function ProjectDetail({
   onRenameMilestone,
   onRemoveMilestone,
   onReorderMilestones,
+  projectExpenses,
+  onAddProjectExpense,
+  onRemoveProjectExpense,
+  signature,
   onClose,
 }: Props) {
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [copied, setCopied] = useState<CopyState>('idle');
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -73,6 +87,14 @@ export default function ProjectDetail({
     setNewTitle('');
     setAdding(false);
   };
+
+  const copySettlement = async () => {
+    const ok = await copyText(projectSettlementText(project, projectExpenses, signature));
+    setCopied(ok ? 'ok' : 'fail');
+    setTimeout(() => setCopied('idle'), 2500);
+  };
+  const copyLabel =
+    copied === 'ok' ? '복사했어요 ✓' : copied === 'fail' ? '이 환경에선 복사가 막혀 있어요' : '정산문 복사';
 
   return (
     <div
@@ -197,6 +219,17 @@ export default function ProjectDetail({
             ＋ 새 항목 추가
           </button>
         )}
+
+        <p className="mypage-section-label">예산</p>
+        <ProjectExpenseTracker
+          projectId={project.id}
+          expenses={projectExpenses}
+          onAdd={onAddProjectExpense}
+          onRemove={onRemoveProjectExpense}
+        />
+        <button type="button" className="btn btn-soft full submit-gap" onClick={copySettlement}>
+          {copyLabel}
+        </button>
 
         <button
           type="button"

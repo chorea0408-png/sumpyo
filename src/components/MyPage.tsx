@@ -5,6 +5,7 @@ import type {
   NoticeClosingTemplate,
   Profile,
   Project,
+  ProjectExpense,
   ProjectMilestone,
   ServiceNote,
   SetlistSong,
@@ -36,6 +37,7 @@ interface Props {
   expenses: Expense[];
   projects: Project[];
   milestones: ProjectMilestone[];
+  projectExpenses: ProjectExpense[];
   longViewOn: boolean;
   onToggleLongView: (v: boolean) => void;
   onImport: (
@@ -49,6 +51,7 @@ interface Props {
     expenses: Expense[],
     projects: Project[],
     milestones: ProjectMilestone[],
+    projectExpenses: ProjectExpense[],
   ) => void;
 }
 
@@ -66,6 +69,7 @@ export default function MyPage({
   expenses,
   projects,
   milestones,
+  projectExpenses,
   longViewOn,
   onToggleLongView,
   now,
@@ -113,6 +117,7 @@ export default function MyPage({
         result.expenses,
         result.projects,
         result.milestones,
+        result.projectExpenses,
       );
       setImportState('ok');
       setImportMsg('불러오기 완료');
@@ -209,6 +214,7 @@ export default function MyPage({
                 expenses,
                 projects,
                 milestones,
+                projectExpenses,
               );
               notifyExport('백업 파일을 내려받았어요');
             }}

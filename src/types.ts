@@ -73,6 +73,20 @@ export interface ProjectMilestone {
   order: number;
 }
 
+export type ProjectExpenseCategory = 'lodging' | 'transport' | 'meal' | 'speaker' | 'etc';
+
+/** 프로젝트(수련회·행사 등) 지출 기록 — S5의 팀 상시 예산(Expense)과 스코프가 달라 별도 타입으로 둔다 */
+export interface ProjectExpense {
+  id: string;
+  projectId: ProjectId;
+  /** 지출 발생일 — ISO yyyy-mm-dd */
+  date: string;
+  category: ProjectExpenseCategory;
+  title: string;
+  /** 원 단위 정수 */
+  amount: number;
+}
+
 /** 사용자가 저장한 공지문 마무리 문구 — '기본'은 저장되지 않는 가상 항목이라 여기 포함 안 됨 */
 export interface NoticeClosingTemplate {
   id: string;
