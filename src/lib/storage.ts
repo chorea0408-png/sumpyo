@@ -1,4 +1,5 @@
 import type {
+  Expense,
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
@@ -18,6 +19,7 @@ const K_LINEUP = 'sumpyo.lineup.v1';
 const K_NOTES = 'sumpyo.notes.v1';
 const K_SETLIST = 'sumpyo.setlist.v1';
 const K_NOTICE_TEMPLATES = 'sumpyo.noticeTemplates.v1';
+const K_EXPENSES = 'sumpyo.expenses.v1';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -82,6 +84,9 @@ export const saveSetlist = (s: SetlistSong[]) => write(K_SETLIST, s);
 export const loadNoticeTemplates = () => read<NoticeClosingTemplate[]>(K_NOTICE_TEMPLATES, []);
 export const saveNoticeTemplates = (t: NoticeClosingTemplate[]) => write(K_NOTICE_TEMPLATES, t);
 
+export const loadExpenses = () => read<Expense[]>(K_EXPENSES, []);
+export const saveExpenses = (e: Expense[]) => write(K_EXPENSES, e);
+
 /** 데모 데이터 초기화 — 진입 여부(entered)는 유지 */
 export function clearData(): void {
   localStorage.removeItem(K_TASKS);
@@ -90,4 +95,5 @@ export function clearData(): void {
   localStorage.removeItem(K_NOTES);
   localStorage.removeItem(K_SETLIST);
   localStorage.removeItem(K_NOTICE_TEMPLATES);
+  localStorage.removeItem(K_EXPENSES);
 }

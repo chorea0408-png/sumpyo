@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import type {
+  Expense,
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
@@ -30,6 +31,7 @@ interface Props {
   setlist: SetlistSong[];
   noticeTemplates: NoticeClosingTemplate[];
   onChangeNoticeTemplates: (t: NoticeClosingTemplate[]) => void;
+  expenses: Expense[];
   onImport: (
     teams: Team[],
     tasks: Task[],
@@ -38,6 +40,7 @@ interface Props {
     notes: ServiceNote[],
     setlist: SetlistSong[],
     noticeTemplates: NoticeClosingTemplate[],
+    expenses: Expense[],
   ) => void;
 }
 
@@ -52,6 +55,7 @@ export default function MyPage({
   setlist,
   noticeTemplates,
   onChangeNoticeTemplates,
+  expenses,
   now,
   onSaveProfile,
   onShowIntro,
@@ -94,6 +98,7 @@ export default function MyPage({
         result.notes,
         result.setlist,
         result.noticeTemplates,
+        result.expenses,
       );
       setImportState('ok');
       setImportMsg('불러오기 완료');
@@ -179,7 +184,7 @@ export default function MyPage({
           <button
             className="mypage-row"
             onClick={() => {
-              exportBackup(teams, tasks, profile, lineup, notes, setlist, noticeTemplates);
+              exportBackup(teams, tasks, profile, lineup, notes, setlist, noticeTemplates, expenses);
               notifyExport('백업 파일을 내려받았어요');
             }}
           >

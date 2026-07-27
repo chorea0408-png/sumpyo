@@ -1,4 +1,5 @@
 import type {
+  Expense,
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
@@ -22,6 +23,7 @@ interface BackupFile {
   notes?: ServiceNote[];
   setlist?: SetlistSong[];
   noticeTemplates?: NoticeClosingTemplate[];
+  expenses?: Expense[];
 }
 
 function fmtStamp(d: Date): string {
@@ -37,6 +39,7 @@ export function exportBackup(
   notes?: ServiceNote[],
   setlist?: SetlistSong[],
   noticeTemplates?: NoticeClosingTemplate[],
+  expenses?: Expense[],
 ): void {
   const payload: BackupFile = {
     app: 'sumpyo',
@@ -49,6 +52,7 @@ export function exportBackup(
     notes,
     setlist,
     noticeTemplates,
+    expenses,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -71,6 +75,7 @@ export type ImportResult =
       notes: ServiceNote[];
       setlist: SetlistSong[];
       noticeTemplates: NoticeClosingTemplate[];
+      expenses: Expense[];
     }
   | { ok: false; error: string };
 
@@ -116,6 +121,19 @@ function isNoticeClosingTemplate(x: unknown): x is NoticeClosingTemplate {
   return typeof t.id === 'string' && typeof t.label === 'string' && typeof t.text === 'string';
 }
 
+function isExpense(x: unknown): x is Expense {
+  if (!x || typeof x !== 'object') return false;
+  const e = x as Record<string, unknown>;
+  return (
+    typeof e.id === 'string' &&
+    typeof e.teamId === 'string' &&
+    typeof e.date === 'string' &&
+    typeof e.category === 'string' &&
+    typeof e.title === 'string' &&
+    typeof e.amount === 'number'
+  );
+}
+
 /** 백업 파일 읽기 — 형식이 다르면 실패 사유를 그대로 반환한다 */
 export function parseBackup(raw: string): ImportResult {
   let data: unknown;
@@ -141,10 +159,11 @@ export function parseBackup(raw: string): ImportResult {
   const noticeTemplates = Array.isArray(d.noticeTemplates)
     ? d.noticeTemplates.filter(isNoticeClosingTemplate)
     : [];
+  const expenses = Array.isArray(d.expenses) ? d.expenses.filter(isExpense) : [];
   // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
   const tasks = migrateStepKeys(d.tasks);
-  return { ok: true, teams, tasks, profile, lineup, notes, setlist, noticeTemplates };
+  return { ok: true, teams, tasks, profile, lineup, notes, setlist, noticeTemplates, expenses };
 }
 
 export function readFileAsText(file: File): Promise<string> {

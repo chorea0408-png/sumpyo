@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import type {
+  Expense,
+  ExpenseCategory,
   LineupAssignment,
   LineupRole,
   LineupSlot,
   NoticeClosingTemplate,
   ServiceNote,
   Team,
+  TeamId,
   TeamMember,
   TemplateStep,
 } from '../types';
@@ -18,6 +21,7 @@ import LineupEditor from './LineupEditor';
 import LineupHistory from './LineupHistory';
 import ServiceNoteHistory from './ServiceNoteHistory';
 import MemberGrowth from './MemberGrowth';
+import ExpenseTracker from './ExpenseTracker';
 import TemplateEditor from './TemplateEditor';
 import BottomNav, { type ViewId } from './BottomNav';
 
@@ -29,7 +33,7 @@ export interface BasicInfo {
   songCount: number;
 }
 
-export type TeamManageSection = 'basic' | 'members' | 'lineup' | 'template' | 'notes' | 'growth';
+export type TeamManageSection = 'basic' | 'members' | 'lineup' | 'template' | 'notes' | 'growth' | 'budget';
 
 interface Props {
   team: Team;
@@ -43,6 +47,9 @@ interface Props {
   signature?: string;
   notes: ServiceNote[];
   noticeTemplates: NoticeClosingTemplate[];
+  expenses: Expense[];
+  onAddExpense: (teamId: TeamId, date: string, category: ExpenseCategory, title: string, amount: number) => void;
+  onRemoveExpense: (id: string) => void;
   onBack: () => void;
   onUpdateBasic: (values: BasicInfo) => void;
   onUpdateMembers: (members: TeamMember[]) => void;
@@ -63,6 +70,9 @@ export default function TeamManage({
   signature,
   notes,
   noticeTemplates,
+  expenses,
+  onAddExpense,
+  onRemoveExpense,
   onBack,
   onUpdateBasic,
   onUpdateMembers,
@@ -352,6 +362,29 @@ export default function TeamManage({
         <div id="tm-panel-growth" className="tm-panel" hidden={section !== 'growth'}>
           <section className="card mypage-section tm-growth">
             <MemberGrowth team={team} now={now} history={history} />
+          </section>
+        </div>
+
+        <h2 className="tm-section-head">
+          <button
+            type="button"
+            className="tm-section-label"
+            aria-expanded={section === 'budget'}
+            aria-controls="tm-panel-budget"
+            onClick={() => setSection('budget')}
+          >
+            <span className="tm-chevron" aria-hidden>▸</span>
+            예산
+          </button>
+        </h2>
+        <div id="tm-panel-budget" className="tm-panel" hidden={section !== 'budget'}>
+          <section className="card mypage-section tm-budget">
+            <ExpenseTracker
+              teamId={team.id}
+              expenses={expenses}
+              onAdd={(date, category, title, amount) => onAddExpense(team.id, date, category, title, amount)}
+              onRemove={onRemoveExpense}
+            />
           </section>
         </div>
 

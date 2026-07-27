@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
+  Expense,
+  ExpenseCategory,
   LineupAssignment,
   LineupSlot,
   NoticeClosingTemplate,
@@ -77,6 +79,7 @@ export default function App() {
   const [noticeTemplates, setNoticeTemplates] = useState<NoticeClosingTemplate[]>(() =>
     storage.loadNoticeTemplates(),
   );
+  const [expenses, setExpenses] = useState<Expense[]>(() => storage.loadExpenses());
   const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
@@ -87,6 +90,7 @@ export default function App() {
   useEffect(() => storage.saveNotes(notes), [notes]);
   useEffect(() => storage.saveSetlist(setlist), [setlist]);
   useEffect(() => storage.saveNoticeTemplates(noticeTemplates), [noticeTemplates]);
+  useEffect(() => storage.saveExpenses(expenses), [expenses]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -253,6 +257,11 @@ export default function App() {
       return [...ss, { id: crypto.randomUUID(), teamId, service, order, title }];
     });
 
+  const addExpense = (teamId: TeamId, date: string, category: ExpenseCategory, title: string, amount: number) =>
+    setExpenses((es) => [...es, { id: crypto.randomUUID(), teamId, date, category, title, amount }]);
+
+  const removeExpense = (id: string) => setExpenses((es) => es.filter((e) => e.id !== id));
+
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     setTasks((ts) =>
@@ -359,6 +368,7 @@ export default function App() {
     setLineup((ls) => ls.filter((a) => a.teamId !== teamId));
     setNotes((ns) => ns.filter((n) => n.teamId !== teamId));
     setSetlist((ss) => ss.filter((s) => s.teamId !== teamId));
+    setExpenses((es) => es.filter((e) => e.teamId !== teamId));
     if (filter === teamId) setFilter('all');
     setTeamManageId(null);
   };
@@ -371,6 +381,7 @@ export default function App() {
     importedNotes: ServiceNote[],
     importedSetlist: SetlistSong[],
     importedNoticeTemplates: NoticeClosingTemplate[],
+    importedExpenses: Expense[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
@@ -379,6 +390,7 @@ export default function App() {
     setNotes(importedNotes);
     setSetlist(importedSetlist);
     setNoticeTemplates(importedNoticeTemplates);
+    setExpenses(importedExpenses);
     setFilter('all');
   };
 
@@ -420,6 +432,7 @@ export default function App() {
       setNotes([]);
       setSetlist([]);
       setNoticeTemplates([]);
+      setExpenses([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -447,6 +460,7 @@ export default function App() {
             setNotes([]);
             setSetlist([]);
             setNoticeTemplates([]);
+            setExpenses([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -469,6 +483,9 @@ export default function App() {
           signature={profile.signature}
           notes={notes}
           noticeTemplates={noticeTemplates}
+          expenses={expenses}
+          onAddExpense={addExpense}
+          onRemoveExpense={removeExpense}
           onBack={() => {
             setTeamManageId(null);
             setTeamManageFocus(undefined);
@@ -597,6 +614,7 @@ export default function App() {
           setlist={setlist}
           noticeTemplates={noticeTemplates}
           onChangeNoticeTemplates={setNoticeTemplates}
+          expenses={expenses}
           now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}

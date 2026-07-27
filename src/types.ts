@@ -56,6 +56,20 @@ export interface NoticeClosingTemplate {
   text: string;
 }
 
+export type ExpenseCategory = 'snack' | 'equipment' | 'print' | 'etc';
+
+/** 팀 상시 지출 기록 — 특정 예배·행사에 묶이지 않는 반복 지출(간식비·장비 등) */
+export interface Expense {
+  id: string;
+  teamId: TeamId;
+  /** 지출 발생일 — ISO yyyy-mm-dd, 사용자가 직접 고름(오늘이 아닐 수 있음) */
+  date: string;
+  category: ExpenseCategory;
+  title: string;
+  /** 원 단위 정수 */
+  amount: number;
+}
+
 export interface Profile {
   name: string;
   church: string;
