@@ -1364,13 +1364,9 @@ a {
     display: block;
   }
 
-  /* .calendar-view·.mypage는 아래 꼬리 블록에서 자체 데스크톱 레이아웃을 가진다(Stage 2) —
-     여기 캡을 계속 두면 같은 명시도에서 이 블록이 파일 뒤쪽에 있는 꼬리 블록을 이길 수 있어
-     아예 제거한다. 팀관리는 아직 미착수라 캡을 유지한다. */
-  .teammanage {
-    max-width: 640px;
-    margin: 0 auto;
-  }
+  /* .calendar-view·.mypage·.teammanage 모두 아래 꼬리 블록에서 자체 데스크톱 레이아웃을
+     가진다(Stage 2) — 여기 캡을 두면 같은 명시도에서 이 블록이 파일 뒤쪽 꼬리 블록을
+     이길 수 있어 전부 제거한다. .container의 1120px를 그대로 상속한다. */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2354,7 +2350,20 @@ a {
   letter-spacing: -0.02em;
 }
 
-.tm-section {
+/* tm-body는 다섯 head+panel 쌍과 삭제 버튼을 함께 감싼다 — 모바일에선 세로로 쌓이는
+   아코디언, 데스크톱(꼬리 블록)에선 grid로 좌측 목록 + 우측 패널이 된다. */
+.tm-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.tm-section-head {
+  margin: 42px 0 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.tm-section-head:first-child {
   margin-top: 18px;
 }
 
@@ -2362,27 +2371,26 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  font: inherit;
   font-size: 13px;
   font-weight: 700;
   color: var(--sage-deep);
   letter-spacing: 0.04em;
   padding: 4px;
   cursor: pointer;
-  list-style: none;
+  text-align: left;
+  background: none;
+  border: none;
 }
 
-.tm-section-label::-webkit-details-marker {
-  display: none;
-}
-
-.tm-section-label::before {
-  content: '▸';
+.tm-chevron {
   font-size: 11px;
   color: var(--ink-3);
   transition: transform 0.15s ease;
 }
 
-.tm-section[open] > .tm-section-label::before {
+.tm-section-label[aria-expanded='true'] .tm-chevron {
   transform: rotate(90deg);
 }
 
@@ -2394,11 +2402,16 @@ a {
   font-size: 12.5px;
 }
 
+/* 헤드 바로 아래 자기 패널까지의 간격 — 예전엔 카드 쪽 margin-top이 이 역할을 했다 */
+.tm-panel {
+  margin-top: 8px;
+}
+
 .tm-basic,
 .tm-members,
 .tm-lineup,
-.tm-template {
-  margin-top: 8px;
+.tm-template,
+.tm-notes {
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -2408,7 +2421,8 @@ a {
 .tm-delete {
   display: flex;
   justify-content: center;
-  margin-top: 22px;
+  /* tm-body 밖의 .main flex-gap(24px)이 더는 여기 안 닿아서 옛 46px(24+22)을 직접 재현 */
+  margin-top: 46px;
   min-height: 56px;
   color: var(--coral-deep);
   font-weight: 650;
@@ -2872,5 +2886,49 @@ a {
   /* stats-report가 grid로 바뀌며 3번째 자식(하이라이트)이 왼쪽 칸에만 배치되는 걸 막는다 */
   .stats-highlight {
     grid-column: 1 / -1;
+  }
+
+  /* 팀 관리 — 왼쪽에 head 5개를 목록처럼, 열린 패널 하나만 오른쪽 전체에.
+     후행 1fr 행이 없으면 라인업처럼 긴 패널이 head 5개를 아래로 벌려놓는다. */
+  .tm-body {
+    display: grid;
+    grid-template-columns: clamp(200px, 22%, 260px) minmax(0, 1fr);
+    grid-template-rows: repeat(5, min-content) 1fr;
+    column-gap: 28px;
+  }
+
+  .tm-section-head {
+    margin-top: 0;
+    grid-column: 1;
+  }
+  .tm-section-head:first-child {
+    margin-top: 0;
+  }
+  .tm-section-head:nth-of-type(1) { grid-row: 1; }
+  .tm-section-head:nth-of-type(2) { grid-row: 2; }
+  .tm-section-head:nth-of-type(3) { grid-row: 3; }
+  .tm-section-head:nth-of-type(4) { grid-row: 4; }
+  .tm-section-head:nth-of-type(5) { grid-row: 5; }
+
+  .tm-section-label {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .tm-section-label[aria-expanded='true'] {
+    background: var(--sage-soft);
+  }
+
+  /* 목록처럼 보이도록 셰브런은 숨긴다 — 열림 표시는 배경색이 대신한다 */
+  .tm-chevron {
+    display: none;
+  }
+
+  /* hidden 패널만 실제로 박스를 만드니, 열린 패널 하나가 이 자리를 그대로 차지한다.
+     삭제 버튼은 딱 하나 남는 6행 1열 칸에 auto-placement로 알아서 들어간다. */
+  .tm-panel {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    margin-top: 0;
   }
 }
