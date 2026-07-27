@@ -17,6 +17,7 @@ import TeamMembersEditor from './TeamMembersEditor';
 import LineupEditor from './LineupEditor';
 import LineupHistory from './LineupHistory';
 import ServiceNoteHistory from './ServiceNoteHistory';
+import MemberGrowth from './MemberGrowth';
 import TemplateEditor from './TemplateEditor';
 import BottomNav, { type ViewId } from './BottomNav';
 
@@ -28,7 +29,7 @@ export interface BasicInfo {
   songCount: number;
 }
 
-export type TeamManageSection = 'basic' | 'members' | 'lineup' | 'template' | 'notes';
+export type TeamManageSection = 'basic' | 'members' | 'lineup' | 'template' | 'notes' | 'growth';
 
 interface Props {
   team: Team;
@@ -333,6 +334,24 @@ export default function TeamManage({
         <div id="tm-panel-notes" className="tm-panel" hidden={section !== 'notes'}>
           <section className="card mypage-section tm-notes">
             <ServiceNoteHistory notes={notes} teamId={team.id} />
+          </section>
+        </div>
+
+        <h2 className="tm-section-head">
+          <button
+            type="button"
+            className="tm-section-label"
+            aria-expanded={section === 'growth'}
+            aria-controls="tm-panel-growth"
+            onClick={() => setSection('growth')}
+          >
+            <span className="tm-chevron" aria-hidden>▸</span>
+            팀원 성장
+          </button>
+        </h2>
+        <div id="tm-panel-growth" className="tm-panel" hidden={section !== 'growth'}>
+          <section className="card mypage-section tm-growth">
+            <MemberGrowth team={team} now={now} history={history} />
           </section>
         </div>
 

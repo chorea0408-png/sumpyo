@@ -2411,7 +2411,8 @@ a {
 .tm-members,
 .tm-lineup,
 .tm-template,
-.tm-notes {
+.tm-notes,
+.tm-growth {
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -2905,7 +2906,7 @@ a {
   .tm-body {
     display: grid;
     grid-template-columns: clamp(200px, 22%, 260px) minmax(0, 1fr);
-    grid-template-rows: repeat(5, min-content) 1fr;
+    grid-template-rows: repeat(6, min-content) 1fr;
     column-gap: 28px;
   }
 
@@ -2921,6 +2922,7 @@ a {
   .tm-section-head:nth-of-type(3) { grid-row: 3; }
   .tm-section-head:nth-of-type(4) { grid-row: 4; }
   .tm-section-head:nth-of-type(5) { grid-row: 5; }
+  .tm-section-head:nth-of-type(6) { grid-row: 6; }
 
   .tm-section-label {
     padding: 10px 12px;
