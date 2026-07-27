@@ -1604,6 +1604,12 @@ a {
   font-size: 13.5px;
 }
 
+/* 프로젝트 화면 상단 "＋ 새 프로젝트" — ProjectsView.tsx */
+.proj-add-btn {
+  margin-top: 18px;
+  margin-bottom: 4px;
+}
+
 .cal-month {
   margin-top: 24px;
 }
@@ -2101,6 +2107,16 @@ a {
 .mypage-arrow {
   color: var(--ink-3);
   font-size: 18px;
+}
+
+.mypage-toggle-state {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.mypage-toggle-state.on {
+  color: var(--sage-deep);
 }
 
 .mypage-hint {
@@ -2684,6 +2700,12 @@ a {
   min-width: 0;
 }
 
+/* 완료한 마일스톤은 취소선으로 — ProjectDetail.tsx */
+.template-title-input.is-done {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
 /* '기본' 항목은 저장되지 않는 가상 행이라 인풋이 아니라 라벨로 보여준다 */
 .notice-tmpl-default-label {
   font-weight: 700;
@@ -2916,6 +2938,11 @@ a {
   /* 캘린더 — 목록 모드: 시간순 읽기 순서를 지키기 위해 2열로 쪼개지 않고 폭만 제한 */
   .cal-month,
   .calendar-view > .pack-empty {
+    max-width: 720px;
+  }
+
+  /* 프로젝트 목록도 캘린더 목록과 같은 이유로 폭만 제한(2열 안 씀) */
+  .projects-view {
     max-width: 720px;
   }
 

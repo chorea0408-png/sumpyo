@@ -3,6 +3,8 @@ import type {
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
+  Project,
+  ProjectMilestone,
   ServiceNote,
   SetlistSong,
   Task,
@@ -24,6 +26,8 @@ interface BackupFile {
   setlist?: SetlistSong[];
   noticeTemplates?: NoticeClosingTemplate[];
   expenses?: Expense[];
+  projects?: Project[];
+  milestones?: ProjectMilestone[];
 }
 
 function fmtStamp(d: Date): string {
@@ -40,6 +44,8 @@ export function exportBackup(
   setlist?: SetlistSong[],
   noticeTemplates?: NoticeClosingTemplate[],
   expenses?: Expense[],
+  projects?: Project[],
+  milestones?: ProjectMilestone[],
 ): void {
   const payload: BackupFile = {
     app: 'sumpyo',
@@ -53,6 +59,8 @@ export function exportBackup(
     setlist,
     noticeTemplates,
     expenses,
+    projects,
+    milestones,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -76,6 +84,8 @@ export type ImportResult =
       setlist: SetlistSong[];
       noticeTemplates: NoticeClosingTemplate[];
       expenses: Expense[];
+      projects: Project[];
+      milestones: ProjectMilestone[];
     }
   | { ok: false; error: string };
 
@@ -134,6 +144,24 @@ function isExpense(x: unknown): x is Expense {
   );
 }
 
+function isProject(x: unknown): x is Project {
+  if (!x || typeof x !== 'object') return false;
+  const p = x as Record<string, unknown>;
+  return typeof p.id === 'string' && typeof p.title === 'string' && typeof p.createdAt === 'string';
+}
+
+function isProjectMilestone(x: unknown): x is ProjectMilestone {
+  if (!x || typeof x !== 'object') return false;
+  const m = x as Record<string, unknown>;
+  return (
+    typeof m.id === 'string' &&
+    typeof m.projectId === 'string' &&
+    typeof m.title === 'string' &&
+    typeof m.done === 'boolean' &&
+    typeof m.order === 'number'
+  );
+}
+
 /** 백업 파일 읽기 — 형식이 다르면 실패 사유를 그대로 반환한다 */
 export function parseBackup(raw: string): ImportResult {
   let data: unknown;
@@ -160,10 +188,24 @@ export function parseBackup(raw: string): ImportResult {
     ? d.noticeTemplates.filter(isNoticeClosingTemplate)
     : [];
   const expenses = Array.isArray(d.expenses) ? d.expenses.filter(isExpense) : [];
+  const projects = Array.isArray(d.projects) ? d.projects.filter(isProject) : [];
+  const milestones = Array.isArray(d.milestones) ? d.milestones.filter(isProjectMilestone) : [];
   // 옛 버전 백업도 storage와 동일하게 마이그레이션 — 팀원 스키마와 단계 키 둘 다
   const teams = d.teams.map((t) => ({ ...t, members: migrateMembers(t.members) }));
   const tasks = migrateStepKeys(d.tasks);
-  return { ok: true, teams, tasks, profile, lineup, notes, setlist, noticeTemplates, expenses };
+  return {
+    ok: true,
+    teams,
+    tasks,
+    profile,
+    lineup,
+    notes,
+    setlist,
+    noticeTemplates,
+    expenses,
+    projects,
+    milestones,
+  };
 }
 
 export function readFileAsText(file: File): Promise<string> {

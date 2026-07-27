@@ -59,6 +59,8 @@ interface Props {
   onDelete: () => void;
   /** 데스크톱 상단 네비에서 다른 탭 선택 시 — 팀 관리 상태를 정리하고 이동 */
   onNavigate: (v: ViewId) => void;
+  /** 상단 네비에 프로젝트 탭을 보여줄지 — App.tsx의 longViewOn 그대로 전달 */
+  longViewOn: boolean;
 }
 
 export default function TeamManage({
@@ -81,6 +83,7 @@ export default function TeamManage({
   onUpdateTemplate,
   onDelete,
   onNavigate,
+  longViewOn,
 }: Props) {
   const [section, setSection] = useState<TeamManageSection>(focusSection ?? 'basic');
   useEffect(() => {
@@ -115,7 +118,7 @@ export default function TeamManage({
   return (
     <div className="container main teammanage">
       <div className="tm-nav-wrap">
-        <BottomNav active="mypage" onChange={onNavigate} />
+        <BottomNav active="mypage" onChange={onNavigate} showProjects={longViewOn} />
       </div>
       <header className="tm-header">
         <button className="icon-btn" aria-label={backLabel} onClick={onBack}>

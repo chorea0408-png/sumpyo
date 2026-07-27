@@ -3,6 +3,8 @@ import type {
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
+  Project,
+  ProjectMilestone,
   ServiceNote,
   SetlistSong,
   Task,
@@ -20,6 +22,9 @@ const K_NOTES = 'sumpyo.notes.v1';
 const K_SETLIST = 'sumpyo.setlist.v1';
 const K_NOTICE_TEMPLATES = 'sumpyo.noticeTemplates.v1';
 const K_EXPENSES = 'sumpyo.expenses.v1';
+const K_PROJECTS = 'sumpyo.projects.v1';
+const K_MILESTONES = 'sumpyo.milestones.v1';
+const K_LONG_VIEW = 'sumpyo.longView.v1';
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -87,6 +92,16 @@ export const saveNoticeTemplates = (t: NoticeClosingTemplate[]) => write(K_NOTIC
 export const loadExpenses = () => read<Expense[]>(K_EXPENSES, []);
 export const saveExpenses = (e: Expense[]) => write(K_EXPENSES, e);
 
+export const loadProjects = () => read<Project[]>(K_PROJECTS, []);
+export const saveProjects = (p: Project[]) => write(K_PROJECTS, p);
+
+export const loadMilestones = () => read<ProjectMilestone[]>(K_MILESTONES, []);
+export const saveMilestones = (m: ProjectMilestone[]) => write(K_MILESTONES, m);
+
+/** '길게 보기' 모드 온오프 — 데이터가 아니라 디바이스 설정이라 clearData()·백업 대상에서 제외 */
+export const loadLongView = () => read<boolean>(K_LONG_VIEW, false);
+export const saveLongView = (v: boolean) => write(K_LONG_VIEW, v);
+
 /** 데모 데이터 초기화 — 진입 여부(entered)는 유지 */
 export function clearData(): void {
   localStorage.removeItem(K_TASKS);
@@ -96,4 +111,6 @@ export function clearData(): void {
   localStorage.removeItem(K_SETLIST);
   localStorage.removeItem(K_NOTICE_TEMPLATES);
   localStorage.removeItem(K_EXPENSES);
+  localStorage.removeItem(K_PROJECTS);
+  localStorage.removeItem(K_MILESTONES);
 }

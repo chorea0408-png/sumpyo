@@ -49,6 +49,30 @@ export interface Team {
   customTemplate?: TemplateStep[];
 }
 
+export type ProjectId = string;
+
+/**
+ * 팀에 묶이지 않는 장기 프로젝트(수련회·소풍·특별행사 등) — 주간 예배 준비와
+ * 완전히 분리된 별도 트랙. 캘린더에 안 그리고 tasks 완료 로직과도 안 합친다.
+ */
+export interface Project {
+  id: ProjectId;
+  title: string;
+  description?: string;
+  createdAt: string;
+  /** 있으면 완료 — 계산에 안 쓰이는 단순 표시값 */
+  completedAt?: string;
+}
+
+/** Project의 체크리스트 항목 — 이름+완료 여부만, 목표일 없음. order로 순서만 관리 */
+export interface ProjectMilestone {
+  id: string;
+  projectId: ProjectId;
+  title: string;
+  done: boolean;
+  order: number;
+}
+
 /** 사용자가 저장한 공지문 마무리 문구 — '기본'은 저장되지 않는 가상 항목이라 여기 포함 안 됨 */
 export interface NoticeClosingTemplate {
   id: string;

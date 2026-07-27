@@ -6,6 +6,9 @@ import type {
   LineupSlot,
   NoticeClosingTemplate,
   Profile,
+  Project,
+  ProjectId,
+  ProjectMilestone,
   ServiceNote,
   SetlistSong,
   Task,
@@ -33,6 +36,9 @@ import CarriedOver from './components/CarriedOver';
 import WaitingBoard from './components/WaitingBoard';
 import UpcomingServices from './components/UpcomingServices';
 import CalendarView from './components/CalendarView';
+import ProjectsView from './components/ProjectsView';
+import ProjectForm from './components/ProjectForm';
+import ProjectDetail from './components/ProjectDetail';
 import MyPage from './components/MyPage';
 import BottomNav, { type ViewId } from './components/BottomNav';
 import TeamCard from './components/TeamCard';
@@ -80,6 +86,11 @@ export default function App() {
     storage.loadNoticeTemplates(),
   );
   const [expenses, setExpenses] = useState<Expense[]>(() => storage.loadExpenses());
+  const [projects, setProjects] = useState<Project[]>(() => storage.loadProjects());
+  const [milestones, setMilestones] = useState<ProjectMilestone[]>(() => storage.loadMilestones());
+  const [longViewOn, setLongViewOn] = useState<boolean>(() => storage.loadLongView());
+  const [addProjectOpen, setAddProjectOpen] = useState(false);
+  const [projectDetailId, setProjectDetailId] = useState<ProjectId | null>(null);
   const { needRefresh, applyUpdate } = useSwUpdate();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
@@ -91,6 +102,14 @@ export default function App() {
   useEffect(() => storage.saveSetlist(setlist), [setlist]);
   useEffect(() => storage.saveNoticeTemplates(noticeTemplates), [noticeTemplates]);
   useEffect(() => storage.saveExpenses(expenses), [expenses]);
+  useEffect(() => storage.saveProjects(projects), [projects]);
+  useEffect(() => storage.saveMilestones(milestones), [milestones]);
+  useEffect(() => storage.saveLongView(longViewOn), [longViewOn]);
+
+  /** 길게 보기 모드를 끄는 순간 프로젝트 탭에 있었다면 홈으로 — 빈 화면 대신 안전한 곳으로 */
+  useEffect(() => {
+    if (!longViewOn && view === 'projects') setView('home');
+  }, [longViewOn, view]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
@@ -262,6 +281,46 @@ export default function App() {
 
   const removeExpense = (id: string) => setExpenses((es) => es.filter((e) => e.id !== id));
 
+  const addProject = (title: string, description?: string) => {
+    const p: Project = { id: crypto.randomUUID(), title, description, createdAt: new Date().toISOString() };
+    setProjects((ps) => [...ps, p]);
+  };
+
+  const updateProjectTitle = (id: ProjectId, title: string) =>
+    setProjects((ps) => ps.map((p) => (p.id === id ? { ...p, title } : p)));
+
+  const updateProjectDescription = (id: ProjectId, description: string) =>
+    setProjects((ps) => ps.map((p) => (p.id === id ? { ...p, description: description || undefined } : p)));
+
+  const toggleProjectComplete = (id: ProjectId) =>
+    setProjects((ps) =>
+      ps.map((p) => (p.id === id ? { ...p, completedAt: p.completedAt ? undefined : new Date().toISOString() } : p)),
+    );
+
+  /** confirm은 ProjectDetail이 이미 물어봤다 — 여기서 또 물으면 이중 확인이 된다 */
+  const deleteProject = (id: ProjectId) => {
+    setProjects((ps) => ps.filter((p) => p.id !== id));
+    setMilestones((ms) => ms.filter((m) => m.projectId !== id));
+    setProjectDetailId(null);
+  };
+
+  const addMilestone = (projectId: ProjectId, title: string) =>
+    setMilestones((ms) => {
+      const order = ms.filter((m) => m.projectId === projectId).length;
+      return [...ms, { id: crypto.randomUUID(), projectId, title, done: false, order }];
+    });
+
+  const toggleMilestone = (id: string) =>
+    setMilestones((ms) => ms.map((m) => (m.id === id ? { ...m, done: !m.done } : m)));
+
+  const renameMilestone = (id: string, title: string) =>
+    setMilestones((ms) => ms.map((m) => (m.id === id ? { ...m, title } : m)));
+
+  const removeMilestone = (id: string) => setMilestones((ms) => ms.filter((m) => m.id !== id));
+
+  const reorderMilestones = (projectId: ProjectId, ordered: ProjectMilestone[]) =>
+    setMilestones((ms) => [...ms.filter((m) => m.projectId !== projectId), ...ordered]);
+
   const rescheduleTask = (id: string, dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     setTasks((ts) =>
@@ -382,6 +441,8 @@ export default function App() {
     importedSetlist: SetlistSong[],
     importedNoticeTemplates: NoticeClosingTemplate[],
     importedExpenses: Expense[],
+    importedProjects: Project[],
+    importedMilestones: ProjectMilestone[],
   ) => {
     setTeams(importedTeams);
     setTasks(importedTasks);
@@ -391,6 +452,8 @@ export default function App() {
     setSetlist(importedSetlist);
     setNoticeTemplates(importedNoticeTemplates);
     setExpenses(importedExpenses);
+    setProjects(importedProjects);
+    setMilestones(importedMilestones);
     setFilter('all');
   };
 
@@ -433,6 +496,8 @@ export default function App() {
       setSetlist([]);
       setNoticeTemplates([]);
       setExpenses([]);
+      setProjects([]);
+      setMilestones([]);
       setFilter('all');
       setView('home');
       setTeamManageId(null);
@@ -461,6 +526,8 @@ export default function App() {
             setSetlist([]);
             setNoticeTemplates([]);
             setExpenses([]);
+            setProjects([]);
+            setMilestones([]);
             setEntered(true);
             setAddTeamOpen(true);
           }}
@@ -501,6 +568,7 @@ export default function App() {
           onUpdateTemplate={(tpl) => updateTeamTemplate(manageTeam.id, tpl)}
           onDelete={() => deleteTeam(manageTeam.id)}
           onNavigate={leaveManage}
+          longViewOn={longViewOn}
         />
         {needRefresh && <UpdateToast onReload={applyUpdate} />}
       </>
@@ -508,6 +576,7 @@ export default function App() {
   }
 
   const detailTeam = detail ? findTeam(teams, detail.teamId) : undefined;
+  const projectFor = projectDetailId ? projects.find((p) => p.id === projectDetailId) : undefined;
   const visibleTeams = teams.filter((t) => filter === 'all' || t.id === filter);
   // 이번 주 예배가 있는 팀만 카드로 (추가된 팀은 캘린더에서 준비 시작)
   const gridTeams = visibleTeams.filter((t) => weekTasks.some((x) => x.teamId === t.id));
@@ -604,6 +673,15 @@ export default function App() {
         />
       )}
 
+      {view === 'projects' && longViewOn && (
+        <ProjectsView
+          projects={projects}
+          milestones={milestones}
+          onAddProject={() => setAddProjectOpen(true)}
+          onOpen={(id) => setProjectDetailId(id)}
+        />
+      )}
+
       {view === 'mypage' && (
         <MyPage
           teams={teams}
@@ -615,6 +693,10 @@ export default function App() {
           noticeTemplates={noticeTemplates}
           onChangeNoticeTemplates={setNoticeTemplates}
           expenses={expenses}
+          projects={projects}
+          milestones={milestones}
+          longViewOn={longViewOn}
+          onToggleLongView={setLongViewOn}
           now={now}
           onSaveProfile={setProfile}
           onShowIntro={() => setEntered(false)}
@@ -629,7 +711,7 @@ export default function App() {
         />
       )}
 
-      <BottomNav active={view} onChange={setView} />
+      <BottomNav active={view} onChange={setView} showProjects={longViewOn} />
 
       {teams.length > 0 && (
         <button className="fab" aria-label="빠른 추가" onClick={() => setQuickOpen(true)}>
@@ -676,6 +758,35 @@ export default function App() {
             setAddTeamOpen(false);
           }}
           onClose={() => setAddTeamOpen(false)}
+        />
+      )}
+
+      {addProjectOpen && (
+        <ProjectForm
+          onSave={(values) => {
+            addProject(values.title, values.description);
+            setAddProjectOpen(false);
+          }}
+          onClose={() => setAddProjectOpen(false)}
+        />
+      )}
+
+      {projectDetailId && projectFor && (
+        <ProjectDetail
+          project={projectFor}
+          milestones={milestones
+            .filter((m) => m.projectId === projectDetailId)
+            .sort((a, b) => a.order - b.order)}
+          onRename={updateProjectTitle}
+          onEditDescription={updateProjectDescription}
+          onToggleComplete={toggleProjectComplete}
+          onDelete={deleteProject}
+          onAddMilestone={addMilestone}
+          onToggleMilestone={toggleMilestone}
+          onRenameMilestone={renameMilestone}
+          onRemoveMilestone={removeMilestone}
+          onReorderMilestones={reorderMilestones}
+          onClose={() => setProjectDetailId(null)}
         />
       )}
 

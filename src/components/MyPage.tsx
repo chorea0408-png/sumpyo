@@ -4,6 +4,8 @@ import type {
   LineupAssignment,
   NoticeClosingTemplate,
   Profile,
+  Project,
+  ProjectMilestone,
   ServiceNote,
   SetlistSong,
   Task,
@@ -32,6 +34,10 @@ interface Props {
   noticeTemplates: NoticeClosingTemplate[];
   onChangeNoticeTemplates: (t: NoticeClosingTemplate[]) => void;
   expenses: Expense[];
+  projects: Project[];
+  milestones: ProjectMilestone[];
+  longViewOn: boolean;
+  onToggleLongView: (v: boolean) => void;
   onImport: (
     teams: Team[],
     tasks: Task[],
@@ -41,6 +47,8 @@ interface Props {
     setlist: SetlistSong[],
     noticeTemplates: NoticeClosingTemplate[],
     expenses: Expense[],
+    projects: Project[],
+    milestones: ProjectMilestone[],
   ) => void;
 }
 
@@ -56,6 +64,10 @@ export default function MyPage({
   noticeTemplates,
   onChangeNoticeTemplates,
   expenses,
+  projects,
+  milestones,
+  longViewOn,
+  onToggleLongView,
   now,
   onSaveProfile,
   onShowIntro,
@@ -99,6 +111,8 @@ export default function MyPage({
         result.setlist,
         result.noticeTemplates,
         result.expenses,
+        result.projects,
+        result.milestones,
       );
       setImportState('ok');
       setImportMsg('불러오기 완료');
@@ -184,7 +198,18 @@ export default function MyPage({
           <button
             className="mypage-row"
             onClick={() => {
-              exportBackup(teams, tasks, profile, lineup, notes, setlist, noticeTemplates, expenses);
+              exportBackup(
+                teams,
+                tasks,
+                profile,
+                lineup,
+                notes,
+                setlist,
+                noticeTemplates,
+                expenses,
+                projects,
+                milestones,
+              );
               notifyExport('백업 파일을 내려받았어요');
             }}
           >
@@ -252,6 +277,12 @@ export default function MyPage({
           <button className="mypage-row mypage-danger" onClick={onReset}>
             <span>데모 데이터 초기화</span>
             <span className="mypage-arrow">›</span>
+          </button>
+          <button className="mypage-row" onClick={() => onToggleLongView(!longViewOn)}>
+            <span>길게 보기 모드 (수련회·행사 등 장기 프로젝트)</span>
+            <span className={`mypage-toggle-state${longViewOn ? ' on' : ''}`}>
+              {longViewOn ? '켜짐' : '꺼짐'}
+            </span>
           </button>
         </section>
       </div>
