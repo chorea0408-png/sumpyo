@@ -329,11 +329,20 @@ a {
 }
 
 .hero-dot {
+  position: relative;
   width: 22px;
   height: 6px;
   border-radius: 999px;
   background: #e4ddd0;
   transition: background 0.18s ease, width 0.18s ease;
+}
+
+/* 시각 크기는 그대로 두고 터치 히트 영역만 키운다 — 가로는 dot 사이 8px gap만큼만
+   넓혀 옆 dot과 안 겹치게, 세로는 44px에 가깝게(hero 안이라 겹칠 형제가 없음) */
+.hero-dot::after {
+  content: '';
+  position: absolute;
+  inset: -19px -4px;
 }
 
 .hero-dot.on {
@@ -858,6 +867,7 @@ a {
 }
 
 .check-circle {
+  position: relative;
   width: 27px;
   height: 27px;
   border-radius: 999px;
@@ -869,6 +879,14 @@ a {
   font-size: 14px;
   flex: none;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+/* 버튼으로 쓰일 때(ProjectDetail/SetlistPanel)만 의미 있음 — <span aria-hidden>인 곳은
+   클릭 핸들러가 없어 히트 영역이 커져도 아무 효과 없다 */
+.check-circle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .check-circle.on {
@@ -1242,8 +1260,10 @@ a {
   flex: 1;
 }
 
+/* 모바일도 팀관리 화면에 탭바를 띄운다 — 없으면 7개 섹션을 끝까지 스크롤한 뒤
+   상단 뒤로가기 버튼까지 되돌아와야 다른 탭으로 나갈 수 있었다 */
 .tm-nav-wrap {
-  display: none;
+  display: block;
 }
 
 /* ─── 완료 취소 토스트 ─── */
@@ -2277,7 +2297,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 22px calc(40px + env(safe-area-inset-bottom));
+  padding: calc(40px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom));
 }
 
 .landing-inner {
@@ -2371,7 +2391,10 @@ a {
 
 /* ─── 팀 관리 풀페이지 (TeamManage) ─── */
 .teammanage {
-  padding-top: 28px;
+  padding-top: calc(28px + env(safe-area-inset-top));
+  /* 모바일엔 탭바가 있어(.tm-nav-wrap) 그만큼 하단 여유가 필요 — 없으면 홈 인디케이터가
+     "이 팀 삭제하기" 버튼과 겹친다. 데스크톱은 꼬리 블록에서 0으로 되돌린다(탭바가 상단으로 이동). */
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 .tm-header {
@@ -2387,7 +2410,7 @@ a {
   letter-spacing: -0.02em;
 }
 
-/* tm-body는 다섯 head+panel 쌍과 삭제 버튼을 함께 감싼다 — 모바일에선 세로로 쌓이는
+/* tm-body는 일곱 head+panel 쌍과 삭제 버튼을 함께 감싼다 — 모바일에선 세로로 쌓이는
    아코디언, 데스크톱(꼬리 블록)에선 grid로 좌측 목록 + 우측 패널이 된다. */
 .tm-body {
   display: flex;
@@ -2395,7 +2418,9 @@ a {
 }
 
 .tm-section-head {
-  margin: 42px 0 0;
+  /* 42px → 10px: 접힌 7개 헤드 사이 여백만으로 408px가 나가던 것을 줄여
+     "목록"으로 훑을 수 있게 한다. 데스크톱은 꼬리 블록에서 0으로 재정의(그리드 행이라 마진 불필요). */
+  margin: 10px 0 0;
   font-size: inherit;
   font-weight: inherit;
 }
@@ -2414,7 +2439,9 @@ a {
   font-weight: 700;
   color: var(--sage-deep);
   letter-spacing: 0.04em;
-  padding: 4px;
+  /* 4px → 12px 10px: 타겟이 26px 남짓이던 것을 ≥44px로. CarriedOver.tsx의 <summary>도
+     이 클래스를 같이 쓰므로 홈의 접힘 헤더 타겟도 함께 커진다. 데스크톱은 꼬리 블록에서 재정의. */
+  padding: 12px 10px;
   cursor: pointer;
   text-align: left;
   background: none;
@@ -2696,11 +2723,12 @@ a {
 .template-order {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   flex: none;
 }
 
 .tmpl-move {
+  position: relative;
   width: 22px;
   height: 18px;
   border-radius: 6px;
@@ -2709,6 +2737,14 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 위/아래 두 버튼이 세로로 붙어 있어(gap 6px) 세로 확장은 서로 안 닿는 -2px까지만,
+   가로는 옆 카드 요소와 8px 여유가 있어 더 넓혀도 안전하다 */
+.tmpl-move::after {
+  content: '';
+  position: absolute;
+  inset: -2px -6px;
 }
 
 .tmpl-move:hover:not(:disabled) {
@@ -2734,6 +2770,7 @@ a {
 }
 
 .tmpl-remove {
+  position: relative;
   flex: none;
   width: 26px;
   height: 26px;
@@ -2743,6 +2780,12 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.tmpl-remove::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .tmpl-remove:hover {
@@ -3004,8 +3047,13 @@ a {
     grid-column: 1 / -1;
   }
 
-  /* 팀 관리 — 왼쪽에 head 5개를 목록처럼, 열린 패널 하나만 오른쪽 전체에.
-     후행 1fr 행이 없으면 라인업처럼 긴 패널이 head 5개를 아래로 벌려놓는다. */
+  /* 데스크톱은 탭바가 상단 고정이라 모바일용 하단 여유(88px)가 필요 없다 */
+  .teammanage {
+    padding-bottom: 0;
+  }
+
+  /* 팀 관리 — 왼쪽에 head 7개를 목록처럼, 열린 패널 하나만 오른쪽 전체에.
+     후행 1fr 행이 없으면 라인업처럼 긴 패널이 head 7개를 아래로 벌려놓는다. */
   .tm-body {
     display: grid;
     grid-template-columns: clamp(200px, 22%, 260px) minmax(0, 1fr);

@@ -12,7 +12,7 @@ import type {
   TeamMember,
   TemplateStep,
 } from '../types';
-import { WEEKDAYS_KO } from '../lib/date';
+import { WEEKDAYS_KO, nextServiceOn } from '../lib/date';
 import { WORSHIP_TEMPLATE } from '../data/template';
 import { LINEUP_ROLES, teamLineupSlots } from '../data/roles';
 import type { LineupPick } from '../lib/lineup';
@@ -115,6 +115,11 @@ export default function TeamManage({
   const template = team.customTemplate && team.customTemplate.length > 0 ? team.customTemplate : WORSHIP_TEMPLATE;
   const isCustomTemplate = !!(team.customTemplate && team.customTemplate.length > 0);
 
+  /** 다음 예배 라인업이 이미 확정됐는지 — LineupEditor.tsx가 편집 모드를 여는 조건과 동일한 판정 */
+  const nextService = nextServiceOn(team.serviceWeekday, now).toISOString();
+  const lineupConfirmed = history.some((a) => a.teamId === team.id && a.service === nextService);
+  const teamExpenseCount = expenses.filter((e) => e.teamId === team.id).length;
+
   return (
     <div className="container main teammanage">
       <div className="tm-nav-wrap">
@@ -138,6 +143,7 @@ export default function TeamManage({
           >
             <span className="tm-chevron" aria-hidden>▸</span>
             기본정보
+            <span className="tm-section-hint">{team.serviceName}</span>
           </button>
         </h2>
         <div id="tm-panel-basic" className="tm-panel" hidden={section !== 'basic'}>
@@ -259,6 +265,7 @@ export default function TeamManage({
           >
             <span className="tm-chevron" aria-hidden>▸</span>
             라인업
+            <span className="tm-section-hint">{lineupConfirmed ? '확정됨' : '미정'}</span>
           </button>
         </h2>
         <div id="tm-panel-lineup" className="tm-panel" hidden={section !== 'lineup'}>
@@ -360,6 +367,7 @@ export default function TeamManage({
           >
             <span className="tm-chevron" aria-hidden>▸</span>
             팀원 성장
+            <span className="tm-section-hint">{members.length}명</span>
           </button>
         </h2>
         <div id="tm-panel-growth" className="tm-panel" hidden={section !== 'growth'}>
@@ -378,6 +386,7 @@ export default function TeamManage({
           >
             <span className="tm-chevron" aria-hidden>▸</span>
             예산
+            <span className="tm-section-hint">{teamExpenseCount}건</span>
           </button>
         </h2>
         <div id="tm-panel-budget" className="tm-panel" hidden={section !== 'budget'}>
