@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { PROJECT_PRESETS } from '../data/projectPresets';
 
 export interface ProjectFormValues {
   title: string;
   description?: string;
+  milestones?: string[];
 }
 
 interface Props {
@@ -13,7 +15,9 @@ interface Props {
 export default function ProjectForm({ onSave, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [presetId, setPresetId] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const preset = PROJECT_PRESETS.find((p) => p.id === presetId);
 
   useEffect(() => {
     document.body.classList.add('lock');
@@ -32,7 +36,11 @@ export default function ProjectForm({ onSave, onClose }: Props) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave({ title: title.trim(), description: description.trim() || undefined });
+    onSave({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      milestones: preset?.milestones,
+    });
   };
 
   return (
@@ -67,6 +75,34 @@ export default function ProjectForm({ onSave, onClose }: Props) {
             placeholder="예) 8월 3주차, 강원도"
             aria-label="프로젝트 설명"
           />
+
+          <p className="field-label">시작 체크리스트 (선택)</p>
+          <div className="team-select">
+            <button
+              type="button"
+              className={`filter-chip${!presetId ? ' active' : ''}`}
+              aria-pressed={!presetId}
+              onClick={() => setPresetId('')}
+            >
+              직접 만들기
+            </button>
+            {PROJECT_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`filter-chip${presetId === p.id ? ' active' : ''}`}
+                aria-pressed={presetId === p.id}
+                onClick={() => setPresetId(p.id)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {preset && (
+            <p className="add-team-hint">
+              {preset.milestones.length}개 항목이 자동으로 채워져요 · 만든 뒤 자유롭게 고칠 수 있어요
+            </p>
+          )}
 
           <button className="btn btn-primary full submit-gap" type="submit" disabled={!title.trim()}>
             추가하기

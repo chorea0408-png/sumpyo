@@ -285,9 +285,21 @@ export default function App() {
 
   const removeExpense = (id: string) => setExpenses((es) => es.filter((e) => e.id !== id));
 
-  const addProject = (title: string, description?: string) => {
+  const addProject = (title: string, description?: string, milestoneTitles?: string[]) => {
     const p: Project = { id: crypto.randomUUID(), title, description, createdAt: new Date().toISOString() };
     setProjects((ps) => [...ps, p]);
+    if (milestoneTitles?.length) {
+      setMilestones((ms) => [
+        ...ms,
+        ...milestoneTitles.map((t, i) => ({
+          id: crypto.randomUUID(),
+          projectId: p.id,
+          title: t,
+          done: false,
+          order: i,
+        })),
+      ]);
+    }
   };
 
   const updateProjectTitle = (id: ProjectId, title: string) =>
@@ -785,7 +797,7 @@ export default function App() {
       {addProjectOpen && (
         <ProjectForm
           onSave={(values) => {
-            addProject(values.title, values.description);
+            addProject(values.title, values.description, values.milestones);
             setAddProjectOpen(false);
           }}
           onClose={() => setAddProjectOpen(false)}
