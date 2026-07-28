@@ -29,6 +29,7 @@ import { waitingTasks } from './lib/waiting';
 import { WEEKDAYS_KO, addDays, isInWeek, nextServiceOn, startOfDay, startOfWeek, thisWeekServiceDate } from './lib/date';
 import { toAssignments, type LineupPick } from './lib/lineup';
 import { useSwUpdate } from './lib/useSwUpdate';
+import { useIsDesktop } from './lib/useIsDesktop';
 import Landing from './components/Landing';
 import EmptyHome from './components/EmptyHome';
 import Header from './components/Header';
@@ -95,6 +96,7 @@ export default function App() {
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [projectDetailId, setProjectDetailId] = useState<ProjectId | null>(null);
   const { needRefresh, applyUpdate } = useSwUpdate();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => storage.saveTasks(tasks), [tasks]);
   useEffect(() => storage.saveTeams(teams), [teams]);
@@ -668,29 +670,59 @@ export default function App() {
                     onToggle={toggle}
                   />
                 </div>
-                <WeeklySummary tasks={tasks} teams={teams} now={now} signature={profile.signature} />
+                {isDesktop ? (
+                  <WeeklySummary tasks={tasks} teams={teams} now={now} signature={profile.signature} />
+                ) : (
+                  /* 모바일에서만 접어둔다 — 데스크톱은 사이드바 컬럼이라 항상 펼쳐져 있어야 한다 */
+                  <details className="tm-section">
+                    <summary className="tm-section-label">
+                      이번 주 완료 기록
+                      <span className="tm-section-hint">
+                        {weekTasks.filter((t) => t.done).length}/{weekTasks.length} 완료
+                      </span>
+                    </summary>
+                    <WeeklySummary tasks={tasks} teams={teams} now={now} signature={profile.signature} />
+                  </details>
+                )}
               </div>
 
-              <p className="section-label">팀별 준비 현황</p>
-              <div className="team-grid">
-                {gridTeams.map((t) => (
-                  <TeamCard
-                    key={t.id}
-                    team={t}
-                    tasks={weekTasks.filter((x) => x.teamId === t.id)}
+              {gridTeams.length > 0 && (
+                <>
+                  <p className="section-label">팀별 준비 현황</p>
+                  <div className="team-grid">
+                    {gridTeams.map((t) => (
+                      <TeamCard
+                        key={t.id}
+                        team={t}
+                        tasks={weekTasks.filter((x) => x.teamId === t.id)}
+                        now={now}
+                        onOpen={() => openTeam(t.id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {isDesktop ? (
+                <UpcomingServices
+                  teams={visibleTeams}
+                  tasks={tasks}
+                  now={now}
+                  onOpenService={openService}
+                  onViewAll={() => setView('calendar')}
+                />
+              ) : (
+                <details className="tm-section">
+                  <summary className="tm-section-label">다가오는 예배</summary>
+                  <UpcomingServices
+                    teams={visibleTeams}
+                    tasks={tasks}
                     now={now}
-                    onOpen={() => openTeam(t.id)}
+                    onOpenService={openService}
+                    onViewAll={() => setView('calendar')}
                   />
-                ))}
-              </div>
-
-              <UpcomingServices
-                teams={visibleTeams}
-                tasks={tasks}
-                now={now}
-                onOpenService={openService}
-                onViewAll={() => setView('calendar')}
-              />
+                </details>
+              )}
             </main>
           </>
         ))}

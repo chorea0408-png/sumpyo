@@ -255,22 +255,25 @@ export default function MyPage({
       </div>
 
       <div className="mypage-block">
-        <p className="mypage-section-label">앱 사용 안내</p>
-        <section className="card mypage-section mypage-guide">
-          <div className="guide-block">
-            <p className="guide-title">홈 화면에 추가하기</p>
-            <p className="guide-text">iOS: Safari에서 공유 버튼 → '홈 화면에 추가'를 누르면 앱처럼 쓸 수 있어요.</p>
-            <p className="guide-text">Android: Chrome에서 메뉴(⋮) → '앱 설치' 또는 '홈 화면에 추가'를 눌러주세요.</p>
-          </div>
-          <div className="guide-block">
-            <p className="guide-title">새 기능이 안 보인다면</p>
-            <p className="guide-text">
-              업데이트 후에도 화면이 그대로면 화면 아래 '새 버전이 있어요' 알림의 새로고침을 눌러주세요. 알림이 안
-              뜨면 앱을 완전히 껐다 다시 열어보세요.
-            </p>
-          </div>
-          <p className="guide-version">버전 {__APP_VERSION__}</p>
-        </section>
+        {/* 한 번 읽고 마는 참조 자료라 기본은 접어둔다 — 모바일·데스크톱 공통 */}
+        <details className="cal-month">
+          <summary className="cal-month-label">앱 사용 안내</summary>
+          <section className="card mypage-section mypage-guide">
+            <div className="guide-block">
+              <p className="guide-title">홈 화면에 추가하기</p>
+              <p className="guide-text">iOS: Safari에서 공유 버튼 → '홈 화면에 추가'를 누르면 앱처럼 쓸 수 있어요.</p>
+              <p className="guide-text">Android: Chrome에서 메뉴(⋮) → '앱 설치' 또는 '홈 화면에 추가'를 눌러주세요.</p>
+            </div>
+            <div className="guide-block">
+              <p className="guide-title">새 기능이 안 보인다면</p>
+              <p className="guide-text">
+                업데이트 후에도 화면이 그대로면 화면 아래 '새 버전이 있어요' 알림의 새로고침을 눌러주세요. 알림이 안
+                뜨면 앱을 완전히 껐다 다시 열어보세요.
+              </p>
+            </div>
+            <p className="guide-version">버전 {__APP_VERSION__}</p>
+          </section>
+        </details>
       </div>
 
       <div className="mypage-block">

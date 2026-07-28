@@ -62,7 +62,7 @@ export default function PriorityCarousel({ tasks, teams, now, onComplete, onOpen
                   완료로 표시
                 </button>
                 <button className="btn btn-ghost" onClick={() => onOpenTeam(task.teamId)}>
-                  팀 체크리스트 보기
+                  체크리스트 보기
                 </button>
               </div>
             </article>
