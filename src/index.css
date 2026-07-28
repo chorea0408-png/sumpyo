@@ -88,7 +88,17 @@ a {
 }
 
 .app {
+  padding-top: env(safe-area-inset-top);
   padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+
+/* 모바일에서만: FAB가 뜨는 탭은 콘텐츠 하단이 FAB(최대 bottom 134px)에 안 가리게 여유를 더 준다.
+   :has()는 media query와 무관하게 일반 .app보다 우선하므로, 900px+ 블록의 .app 재정의(40px)와
+   충돌하지 않도록 여기서부터 max-width로 범위를 좁혀둔다 — 데스크톱은 이미 FAB 위치가 20px이라 문제 없음. */
+@media (max-width: 899px) {
+  .app:has(.fab) {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  }
 }
 
 /* ─── 헤더 ─── */
@@ -699,6 +709,7 @@ a {
   align-items: flex-end;
   justify-content: center;
   animation: fade 0.18s ease;
+  overscroll-behavior: contain;
 }
 
 .sheet {
@@ -708,6 +719,7 @@ a {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -729,6 +741,14 @@ a {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  /* 긴 시트를 끝까지 내려도 닫기 버튼이 화면 밖으로 안 나가게 — .sheet의 좌우 패딩(20px)을
+     음수 마진으로 상쇄해 배경이 끝까지 깔리게 한다 */
+  position: sticky;
+  top: -22px;
+  margin: -22px -20px 0;
+  padding: 22px 20px 12px;
+  background: var(--bg);
+  z-index: 2;
 }
 
 .sheet-head h3 {
@@ -1230,7 +1250,8 @@ a {
 .undo-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(84px + env(safe-area-inset-bottom));
+  /* FAB(z40, bottom 76~134px)보다 위로 — 데스크톱은 900px+ 블록에서 28px로 재정의 */
+  bottom: calc(144px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 50;
   display: flex;

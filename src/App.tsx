@@ -746,7 +746,7 @@ export default function App() {
 
       <BottomNav active={view} onChange={setView} showProjects={longViewOn} />
 
-      {teams.length > 0 && (
+      {teams.length > 0 && (view === 'home' || view === 'calendar') && (
         <button className="fab" aria-label="빠른 추가" onClick={() => setQuickOpen(true)}>
           ＋
         </button>
